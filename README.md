@@ -9,7 +9,13 @@ A reusable, responsive captive portal framework for ESP32 built with:
 - Mobile-friendly styling
 - Modular components: `PageRenderer`, `CPHandlers`, `CaptivePortal`
 
-![Login](https://github.com/hansaplasst/ESP32-Captive-Portal-framework/blob/main/images/Login.png?raw=true)![Home](https://github.com/hansaplasst/ESP32-Captive-Portal-framework/blob/main/images/Home.png?raw=true)![Edit](https://github.com/hansaplasst/ESP32-Captive-Portal-framework/blob/main/images/Edit.png?raw=true)![Devices](https://github.com/hansaplasst/ESP32-Captive-Portal-framework/blob/main/images/Devices.png?raw=true)![System](https://github.com/hansaplasst/ESP32-Captive-Portal-framework/blob/main/images/System.png?raw=true)
+<p float="left">
+  <img src="images/Login.png?raw=true" width="200" />
+  <img src="images/Home.png?raw=true" width="200" />
+  <img src="images/Edit.png?raw=true" width="200" />
+  <img src="images/Devices.png?raw=true" width="200" />
+  <img src="images/System.png?raw=true" width="200" />
+</p>
 
 ## Project Structure
 
