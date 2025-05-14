@@ -84,7 +84,7 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // disable brownout
 #endif
-  WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0));
+  WiFi.softAPConfig(DeviceIP, DeviceIP, DeviceIPMask);
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 1);  // re-enable brownout
 #endif

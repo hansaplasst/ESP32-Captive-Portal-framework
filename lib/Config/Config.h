@@ -1,5 +1,6 @@
 #ifndef CP_CONFIG_H
 #define CP_CONFIG_H
+#include <WiFi.h>
 
 /**
  * @file Config.h
@@ -17,6 +18,9 @@
 /// Some ESP-WROOM-32 modules trigger brownout when enabling WiFi or Bluetooth.
 /// Uncomment this line to temporarily disable brownout detection during WiFi/Bluetooth setup.
 #define BROWNOUT_HACK
+
+IPAddress DeviceIP = IPAddress(192, 168, 4, 1);        ///< Default device IP address
+IPAddress DeviceIPMask = IPAddress(255, 255, 255, 0);  ///< Default device subnet mask
 
 /**
  * @brief Checks whether the configuration file exists.
