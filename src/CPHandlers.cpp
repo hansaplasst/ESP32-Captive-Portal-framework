@@ -22,7 +22,7 @@ extern bool readUser(String &user, String &pass);
  * @return false if file not found or parse error
  */
 bool readUser(String &user, String &pass) {
-  File f = LittleFS.open(CONFIG_FILE, "r");
+  File f = LittleFS.open(Settings.ConfigFile, "r");
   if (!f) return false;
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, f);
@@ -40,14 +40,14 @@ bool readUser(String &user, String &pass) {
  * @param newpass New password to store
  */
 void updatePassword(const String &newpass) {
-  File f = LittleFS.open(CONFIG_FILE, "r");
+  File f = LittleFS.open(Settings.ConfigFile, "r");
   if (!f) return;
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, f);
   f.close();
   if (err) return;
   doc["user"]["pass"] = newpass;
-  f = LittleFS.open(CONFIG_FILE, "w");
+  f = LittleFS.open(Settings.ConfigFile, "w");
   serializeJson(doc, f);
   f.close();
 }
@@ -95,7 +95,7 @@ void handleLogin() {
 
   if (server.arg("user") == u && server.arg("pass") == p) {
     isAuthenticated = true;
-    if (u == ADMIN_USER && p == ADMIN_PASSWORD) {
+    if (u == Settings.AdminUser && p == Settings.AdminPassword) {
       server.send(200, "text/html", loadFile("/defaultpass_prompt.html"));
     } else {
       server.sendHeader("Location", "/home");
@@ -116,8 +116,7 @@ void handleUpdatePass() {
   }
   updatePassword(server.arg("newpass"));
   isAuthenticated = false;
-  server.sendHeader("Location", "/");
-  server.send(302);
+  server.send(200, "text/html", loadFile("/password_updated.html"));
 }
 
 /**

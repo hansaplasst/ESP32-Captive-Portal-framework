@@ -31,7 +31,7 @@ void CaptivePortal::begin(const char* ssid, const char* password) {
   DPRINTF(1, "CaptivePortal booting...\n");
 
   pinMode(LEDPIN, OUTPUT);
-  pinMode(RESET_PIN, INPUT_PULLUP);
+  pinMode(Settings.ResetPin, INPUT_PULLUP);
 
   checkReset();               // Check if reset button is held
   setupFS();                  // Mount LittleFS and list files
@@ -52,7 +52,7 @@ void CaptivePortal::checkReset() {
     factoryReset();
   }
 
-  checkResetButtonOnStartup(RESET_PIN, LEDPIN);  // ESPResetUtil feature
+  checkResetButtonOnStartup(Settings.ResetPin, Settings.LedPin);  // ESPResetUtil feature
 }
 
 /**
@@ -84,7 +84,7 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // disable brownout
 #endif
-  WiFi.softAPConfig(DeviceIP, DeviceIP, DeviceIPMask);
+  WiFi.softAPConfig(Settings.DeviceIP, Settings.DeviceIP, Settings.DeviceIPMask);
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 1);  // re-enable brownout
 #endif
@@ -130,7 +130,7 @@ void CaptivePortal::handle() {
   dnsServer.processNextRequest();
   server.handleClient();
 
-  if (digitalRead(RESET_PIN) == LOW) {
+  if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime\n");
     espReset();
   }

@@ -1,7 +1,7 @@
 {
   "name": "ESP32CaptivePortal",
   "version": "1.0.0",
-  "description": "Reusable Captive Portal framework for ESP32",
+  "description": "Modular captive portal framework for ESP32",
   "keywords": ["esp32", "captive", "portal", "wifi", "reset", "login"],
   "frameworks": "arduino",
   "platforms": "espressif32",

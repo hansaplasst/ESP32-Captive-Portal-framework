@@ -3,6 +3,8 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
+CaptivePortalConfig Settings;  ///< Configuration settings for the captive portal
+
 /**
  * @brief Checks whether the configuration file exists on the file system.
  *
@@ -10,25 +12,21 @@
  * @return false otherwise
  */
 bool configExists() {
-  return LittleFS.exists(CONFIG_FILE);
+  return LittleFS.exists(Settings.ConfigFile);
 }
 
 /**
  * @brief Creates a default config.json file with admin user and device settings.
  *
- * The default values are configurable in Config.h:
- * - ADMIN_USER: "Admin"
- * - ADMIN_PASSWORD: "password"
- * - DEVICE_HOSTNAME: "esp32-portal"
- * - DEVICE_TIMEZONE: "Europe/Amsterdam"
+ * The default values are configurable in Config.h
  */
 void createDefaultConfig() {
   JsonDocument doc;
-  doc["user"]["name"] = ADMIN_USER;
-  doc["user"]["pass"] = ADMIN_PASSWORD;
-  doc["device"]["hostname"] = DEVICE_HOSTNAME;
-  doc["device"]["timezone"] = DEVICE_TIMEZONE;
-  File f = LittleFS.open(CONFIG_FILE, "w");
+  doc["user"]["name"] = Settings.AdminUser;
+  doc["user"]["pass"] = Settings.AdminPassword;
+  doc["device"]["hostname"] = Settings.DeviceHostname;
+  doc["device"]["timezone"] = Settings.DeviceTimezone;
+  File f = LittleFS.open(Settings.ConfigFile, "w");
   if (f) {
     serializeJson(doc, f);
     f.close();
