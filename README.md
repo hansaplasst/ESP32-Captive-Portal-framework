@@ -10,11 +10,11 @@ A reusable, responsive captive portal framework for ESP32 built with:
 - Modular components: `PageRenderer`, `CPHandlers`, `CaptivePortal`
 
 <p float="left">
-  <img src="images/Login.png?raw=true" width="200" />
-  <img src="images/Home.png?raw=true" width="200" />
-  <img src="images/Edit.png?raw=true" width="200" />
-  <img src="images/Devices.png?raw=true" width="200" />
-  <img src="images/System.png?raw=true" width="200" />
+  <img src="images/Login.png?raw=true" width="160" />
+  <img src="images/Home.png?raw=true" width="160" />
+  <img src="images/Edit.png?raw=true" width="160" />
+  <img src="images/Devices.png?raw=true" width="160" />
+  <img src="images/System.png?raw=true" width="160" />
 </p>
 
 ## Project Structure
