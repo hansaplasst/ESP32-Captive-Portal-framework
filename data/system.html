@@ -1,0 +1,27 @@
+<div class="container">
+  <h2>System Settings</h2>
+  <form
+    action="/updatepass"
+    method="POST"
+    onsubmit="return confirm('Are you sure you want to change the admin password?');"
+  >
+    <label for="newpass">Change Admin Password</label>
+    <input type="password" id="newpass" name="newpass" required />
+    <input type="submit" value="🔐 Update Password" />
+  </form>
+  <form action="/reboot" method="POST">
+    <input type="submit" value="🔁 Reboot" />
+  </form>
+
+  <form
+    action="/factoryreset"
+    method="POST"
+    onsubmit="return confirm('Are you sure you want to reset to factory defaults?');"
+  >
+    <input type="submit" value="⚙️ Factory Reset" />
+  </form>
+
+  <form action="/logout" method="POST">
+    <input type="submit" value="🔴 Logout" />
+  </form>
+</div>

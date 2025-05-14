@@ -1,0 +1,78 @@
+body {
+  font-family: sans-serif;
+  background-color: #f2f2f2;
+  padding: 20px;
+  margin: 0;
+  line-height: 1.6;
+}
+.container {
+  max-width: 90%;
+  margin: auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+input[type=text],
+input[type=password],
+input[type=submit],
+button {
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+input[type=submit],
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  font-weight: bold;
+}
+input[type=submit]:hover,
+button:hover {
+  background-color: #45a049;
+}
+h1, h2, p {
+  text-align: center;
+  margin: 10px 0;
+}
+.tabs {
+  display: flex;
+  justify-content: center;
+  background-color: #4CAF50;
+  flex-wrap: wrap;
+}
+.tabs a {
+  flex: 1;
+  text-align: center;
+  padding: 14px 0;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 3px solid transparent;
+  min-width: 80px;
+}
+.tabs a.active {
+  border-bottom: 3px solid yellow;
+  background-color: #388e3c;
+}
+@media screen and (max-width: 480px) {
+  .tabs a {
+    font-size: 14px;
+    padding: 10px 0;
+  }
+  input[type=text],
+  input[type=password],
+  input[type=submit],
+  button {
+    font-size: 14px;
+    padding: 12px;
+  }
+  .container {
+    padding: 10px;
+  }
+}

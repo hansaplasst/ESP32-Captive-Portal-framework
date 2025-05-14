@@ -1,0 +1,10 @@
+{
+  "user": {
+    "name": "Admin",
+    "pass": "password"
+  },
+  "device": {
+    "hostname": "esp32-portal",
+    "timezone": "Europe/Amsterdam"
+  }
+}
