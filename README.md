@@ -1,6 +1,6 @@
 # ESP32 Captive Portal
 
-A reusable, responsive captive portal system for ESP32 built with:
+A reusable, responsive captive portal framework for ESP32 built with:
 
 - Web interface using LittleFS
 - Login system with session tracking
@@ -13,24 +13,25 @@ A reusable, responsive captive portal system for ESP32 built with:
 
 - `src/main.cpp` → project entrypoint
 - `lib/` → contains all components as modular code
-- `lib/Config.h` → contains the portal configuration
+- `lib/Config/Config.h` → contains the portal configuration.
 - `data/` → contains HTML files (upload via `pio run --target uploadfs`)
 - `platformio.ini` → PlatformIO configuration
 
 ## How to use
 
-1. 
-2. Flash firmware via PlatformIO
-3. Upload `/data` files to LittleFS using:`pio run --target uploadfs`
-4. Open serial monitor to see debug logs
+1. Configure `DEVICE_HOSTNAME` and other configurations in: `/lib/Config/Config.h`
+2. Configure `BAUDRATE` and `DEBUG_LEVEL` in: `platformio.ini`
+3. Modify and/or upload `/data` files using:`pio run --target uploadfs`
+4. Flash firmware via PlatformIO
+5. Open your phone's network settings and connect to `DEVICE_HOSTNAME`
+6. Open serial monitor to see debug logs
 
 ## Factory reset
 
-- GPIO 4 acts as a reset button
+- By default GPIO 4 acts as a reset button
 - Press it shortly to reset/reboot the ESP32
-- Hold it for 10s during boot to trigger a factory reset (deletes config.json)
-
-You can also reboot or reset via the System tab in the web UI
+- To trigger a factory default reset. Hold it (for 10s) until the device led flashes quickly **<u>twice</u>** then release.
+- You can also reboot or reset via the System tab in the Captive Portal web UI
 
 ## Dependencies
 
