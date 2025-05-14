@@ -29,7 +29,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Factory reset
 
 - By default GPIO 4 acts as a reset button
-- Press it shortly to reset/reboot the ESP32
+- Press it shortly to reboot the ESP32
 - To trigger a factory default reset. Hold it (for 10s) until the device led flashes quickly **<u>twice</u>** then release.
 - You can also reboot or reset via the System tab in the Captive Portal web UI
 
