@@ -5,6 +5,6 @@
   },
   "device": {
     "hostname": "esp32-portal",
-    "timezone": "Europe/Amsterdam"
+    "timezone": "Etc/UTC"
   }
 }

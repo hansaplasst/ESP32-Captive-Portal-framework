@@ -20,15 +20,14 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Project Structure
 
 - `src/main.cpp` → project entrypoint
-- `lib/` → contains all components as modular code
-- `lib/Config/Config.h` → contains the portal configuration.
+- `include/Config.h` → contains the portal configuration.
 - `data/` → contains HTML files (upload via `pio run --target uploadfs`)
 - `platformio.ini` → PlatformIO configuration
 
 ## How to use
 
 1. git clone https://github.com/hansaplasst/ESP32-Captive-Portal-framework.git
-2. Configure project settings in: `/lib/Config/Config.h`
+2. Configure project settings in: `/include/Config.h`
 3. Configure `BAUDRATE` and `DEBUG_LEVEL` in: `platformio.ini`
 4. Modify and/or upload `/data/*` files using:`pio run --target uploadfs`
 5. Flash firmware via PlatformIO or via `pio run`
@@ -38,8 +37,8 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Factory reset
 
 - By default GPIO 4 acts as a reset button
-- Press it shortly to reboot the ESP32
-- To trigger a factory default reset. Hold it (for 10s) until the device led flashes quickly **<u>twice</u>** then release.
+- Pull to ground shortly to reboot the ESP32
+- To trigger a factory default reset. Pull to ground (for 10s) until the device led flashes quickly **<u>twice</u>** then release.
 - You can also reboot or reset via the System tab in the Captive Portal web UI
 
 ## Dependencies

@@ -13,7 +13,7 @@ struct CaptivePortalConfig {
   const char* AdminUser = "Admin";                       ///< Default admin username
   const char* AdminPassword = "password";                ///< Default admin password
   const char* DeviceHostname = "esp32-portal";           ///< Default device hostname
-  const char* DeviceTimezone = "Europe/Amsterdam";       ///< Default device timezone
+  const char* DeviceTimezone = "Etc/UCT";                ///< Default device timezone
   IPAddress DeviceIP = IPAddress(192, 168, 4, 1);        ///< Default device IP address
   IPAddress DeviceIPMask = IPAddress(255, 255, 255, 0);  ///< Default device IP mask
 };
