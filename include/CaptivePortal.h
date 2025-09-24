@@ -26,7 +26,7 @@ class CaptivePortal {
    * @param ssid SSID of the access point (default: "ESP32-Login")
    * @param password Password for the access point (default: "12345678")
    */
-  void begin(const char* ssid = "ESP32-Login", const char* password = "12345678");
+  virtual void begin(const char* ssid = "ESP32-Login", const char* password = "12345678");
 
   /**
    * @brief Main loop handler.
