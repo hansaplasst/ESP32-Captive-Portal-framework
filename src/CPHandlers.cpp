@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <ESPResetUtil.h>
 #include <LittleFS.h>
+#include <Update.h>
 
 #include "Config.h"
 #include "PageRenderer.h"
@@ -172,4 +173,103 @@ void handleFactoryReset() {
 void handleCaptive() {
   server.sendHeader("Location", String("http://") + WiFi.softAPIP().toString() + "/");
   server.send(302, "text/plain", "");
+}
+
+/**
+ * @brief Handles firmware update via POST to /update.
+ */
+void handleFirmwareUpload() {
+  HTTPUpload &upload = server.upload();
+
+  if (upload.status == UPLOAD_FILE_START) {
+    DPRINTF(1, "[OTA] Update start: %s\n", upload.filename.c_str());
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (Update.end(true)) {
+      DPRINTF(1, "[OTA] Update success: %u bytes\n", upload.totalSize);
+    } else {
+      Update.printError(Serial);
+    }
+  }
+}
+/**
+ * @brief Handles firmware update completion.
+ */
+void handleFirmwareUpdateDone() {
+  if (Update.hasError()) {
+    server.send(500, "text/plain", "❌ Update failed!");
+  } else {
+    server.send(200, "text/plain", "✅ Update successful. Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+}
+
+/**
+ * @brief Lists files in LittleFS as a JSON array.
+ */
+void handleListFiles() {
+  String json = "[";
+  File root = LittleFS.open("/");
+  if (root && root.isDirectory()) {
+    File file = root.openNextFile();
+    bool first = true;
+    while (file) {
+      if (!first) json += ",";
+      json += "\"" + String(file.name()) + "\"";
+      first = false;
+      file = root.openNextFile();
+    }
+  }
+  json += "]";
+  server.send(200, "application/json", json);
+}
+
+/**
+ * @brief Serves the file editing page.
+ */
+void handleEditFileGet() {
+  if (!server.hasArg("name")) {
+    server.send(400, "text/plain", "Missing filename");
+    return;
+  }
+  String name = server.arg("name");
+  if (!name.startsWith("/")) name = "/" + name;  // <-- fix
+
+  File file = LittleFS.open(name, "r");
+  if (!file) {
+    server.send(404, "text/plain", "File not found");
+    return;
+  }
+  String content = file.readString();
+  file.close();
+  server.send(200, "text/plain", content);
+}
+
+/**
+ * @brief Handles saving edits to a file.
+ */
+void handleEditFilePost() {
+  if (!server.hasArg("name") || !server.hasArg("content")) {
+    server.send(400, "text/plain", "Missing params");
+    return;
+  }
+  String name = server.arg("name");
+  if (!name.startsWith("/")) name = "/" + name;  // <-- fix
+
+  String content = server.arg("content");
+  File file = LittleFS.open(name, "w");
+  if (!file) {
+    server.send(500, "text/plain", "Could not open file for writing");
+    return;
+  }
+  file.print(content);
+  file.close();
+  server.send(200, "text/plain", "File saved!");
 }

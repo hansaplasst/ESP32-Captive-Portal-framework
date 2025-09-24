@@ -121,6 +121,12 @@ void CaptivePortal::setupHandlers() {
   server.on("/fwlink", handleCaptive);
   server.on("/hotspot-detect.html", handleCaptive);
   server.onNotFound(handleCaptive);
+
+  server.on("/update", HTTP_POST, handleFirmwareUpdateDone, handleFirmwareUpload);
+
+  server.on("/listfiles", HTTP_GET, handleListFiles);
+  server.on("/editfile", HTTP_GET, handleEditFileGet);
+  server.on("/editfile", HTTP_POST, handleEditFilePost);
 }
 
 /**

@@ -44,5 +44,9 @@ void handleLogout();
 void handleReboot();
 void handleFactoryReset();
 void handleCaptive();
-
+void handleFirmwareUpload();
+void handleFirmwareUpdateDone();
+void handleListFiles();
+void handleEditFileGet();
+void handleEditFilePost();
 #endif  // CP_HANDLERS_H

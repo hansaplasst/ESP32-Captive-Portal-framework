@@ -7,10 +7,11 @@
   >
     <label for="newpass">Change Admin Password</label>
     <input type="password" id="newpass" name="newpass" required />
-    <input type="submit" value="🔐 Update Password" />
+    <input type="submit" value="Update Password" />
   </form>
+
   <form action="/reboot" method="POST">
-    <input type="submit" value="🔁 Reboot" />
+    <input type="submit" value="Reboot" />
   </form>
 
   <form
@@ -18,10 +19,31 @@
     method="POST"
     onsubmit="return confirm('Are you sure you want to reset to factory defaults?');"
   >
-    <input type="submit" value="⚙️ Factory Reset" />
+    <input type="submit" value="Factory Reset" />
   </form>
 
   <form action="/logout" method="POST">
-    <input type="submit" value="🔴 Logout" />
+    <input type="submit" value="Logout" />
+  </form>
+
+  <h2>Firmware Update</h2>
+  <form
+    method="POST"
+    action="/update"
+    enctype="multipart/form-data"
+    onsubmit="return confirm('Upload new firmware and update device?');"
+  >
+    <p>
+      <strong>Tip:</strong> If the file upload button does not work, open this
+      page manually in your browser at <code>http://192.168.4.1/system</code>
+    </p>
+    <input
+      type="file"
+      name="firmware"
+      accept=".bin,application/octet-stream"
+      required
+    />
+
+    <input type="submit" value="Upload & Flash" />
   </form>
 </div>

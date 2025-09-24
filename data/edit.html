@@ -1,4 +1,52 @@
 <div class="container">
-  <h2>Edit Page</h2>
-  <p>Coming soon...</p>
+  <h2>LittleFS File Editor</h2>
+
+  <label for="fileSelect">Select File:</label>
+  <select id="fileSelect"></select>
+  <button onclick="loadFile()">Open</button>
+
+  <h3>Content</h3>
+  <textarea id="fileContent" rows="20" style="width: 100%"></textarea>
+  <br />
+  <button onclick="saveFile()">Save</button>
+
+  <p id="status"></p>
+
+  <script>
+    async function fetchFiles() {
+      let res = await fetch("/listfiles");
+      let files = await res.json();
+      let select = document.getElementById("fileSelect");
+      files.forEach((f) => {
+        let opt = document.createElement("option");
+        opt.value = f;
+        opt.textContent = f;
+        select.appendChild(opt);
+      });
+    }
+
+    async function loadFile() {
+      let file = document.getElementById("fileSelect").value;
+      let res = await fetch("/editfile?name=" + encodeURIComponent(file));
+      let text = await res.text();
+      document.getElementById("fileContent").value = text;
+    }
+
+    async function saveFile() {
+      let file = document.getElementById("fileSelect").value;
+      let content = document.getElementById("fileContent").value;
+      let res = await fetch("/editfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body:
+          "name=" +
+          encodeURIComponent(file) +
+          "&content=" +
+          encodeURIComponent(content),
+      });
+      document.getElementById("status").textContent = await res.text();
+    }
+
+    fetchFiles();
+  </script>
 </div>

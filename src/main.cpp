@@ -2,12 +2,15 @@
 #include <CaptivePortal.h>
 
 #include "Config.h"
-CaptivePortal portal;
+CaptivePortal *portal = nullptr;
 
 void setup() {
-  portal.begin("ESP32-Login", "12345678");
+  portal = new CaptivePortal();
+  portal->begin("ESP32-Login", "12345678");
 }
 
 void loop() {
-  portal.handle();
+  if (portal) {
+    portal->handle();
+  }
 }
