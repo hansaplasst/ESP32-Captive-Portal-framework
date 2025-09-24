@@ -36,6 +36,9 @@ class CaptivePortal {
    */
   void handle();
 
+ protected:
+  WebServer& web() { return server; }  // Access to the web server for derived classes
+
  private:
   /**
    * @brief Initializes the WiFi access point.
