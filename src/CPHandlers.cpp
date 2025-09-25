@@ -1,6 +1,7 @@
 #include "CPHandlers.h"
 
 #include <ArduinoJson.h>
+#include <CaptivePortal.h>
 #include <ESPResetUtil.h>
 #include <LittleFS.h>
 #include <Update.h>
@@ -9,6 +10,7 @@
 #include "PageRenderer.h"
 
 extern WebServer server;
+extern CaptivePortal portal;
 extern String loadFile(const String &path);
 extern String loadPageWithMenu(const String &filePath, const String &activeTab, const String &pageTitle);
 extern void updatePassword(const String &newpass);
@@ -53,9 +55,6 @@ void updatePassword(const String &newpass) {
   f.close();
 }
 
-/// Whether the user is currently authenticated
-bool isAuthenticated = false;
-
 /**
  * @brief Sends a styled message page to the client with an optional button.
  */
@@ -70,6 +69,41 @@ void sendMobileMessage(int code, const String &title, const String &message, con
   html += "<a href='" + target + "' style='display:inline-block; margin-top:20px; padding:10px 20px; background-color:#ef4444; color:white; text-decoration:none; border-radius:5px;'>" + buttonText + "</a>";
   html += "</div></body></html>";
   server.send(code, "text/html", html);
+}
+
+/**
+ * @brief Extracts sessionId from the Cookie header.
+ *
+ * @return sessionId string or empty if not found
+ */
+String getSessionIdFromCookie() {
+  if (!server.hasHeader("Cookie")) return "";
+  String cookie = server.header("Cookie");
+  int pos = cookie.indexOf("sessionId=");
+  if (pos == -1) return "";
+  String sid = cookie.substring(pos + 10);
+  int semi = sid.indexOf(';');
+  if (semi > 0) sid = sid.substring(0, semi);
+  sid.trim();
+  return sid;
+}
+
+/**
+ * @brief Checks if the user is authenticated via session cookie.
+ *
+ * If not authenticated, redirects to login page.
+ *
+ * @return true if authenticated
+ * @return false if not authenticated (response already sent)
+ */
+bool requireAuth() {
+  String sid = getSessionIdFromCookie();
+  if (!portal.isSessionValid(sid)) {
+    server.sendHeader("Location", "/login.html");
+    server.send(302, "text/plain", "Redirecting to login");
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -95,12 +129,15 @@ void handleLogin() {
   }
 
   if (server.arg("user") == u && server.arg("pass") == p) {
-    isAuthenticated = true;
     if (u == Settings.AdminUser && p == Settings.AdminPassword) {
       server.send(200, "text/html", loadFile("/defaultpass_prompt.html"));
     } else {
-      server.sendHeader("Location", "/home");
-      server.send(302);
+      // server.sendHeader("Location", "/home");
+      // server.send(302);
+      String sid = portal.createSession();
+      server.sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/; HttpOnly");
+      server.sendHeader("Location", "/home.html");
+      server.send(302, "text/plain", "Redirecting...");
     }
   } else {
     sendMobileMessage(403, "Invalid Login", "Incorrect username or password.");
@@ -116,30 +153,29 @@ void handleUpdatePass() {
     return;
   }
   updatePassword(server.arg("newpass"));
-  isAuthenticated = false;
-  server.send(200, "text/html", loadFile("/password_updated.html"));
+  handleLogout();
 }
 
 /**
  * @brief Shows the home page if logged in.
  */
 void handleHome() {
-  if (!isAuthenticated) {
-    sendMobileMessage(403, "Access Denied", "You must be logged in.");
-    return;
-  }
+  if (!requireAuth()) return;
   server.send(200, "text/html", loadPageWithMenu("/home.html", "home", "Home"));
 }
 
 void handleEdit() {
+  if (!requireAuth()) return;
   server.send(200, "text/html", loadPageWithMenu("/edit.html", "edit", "Edit"));
 }
 
 void handleDevices() {
+  if (!requireAuth()) return;
   server.send(200, "text/html", loadPageWithMenu("/devices.html", "devices", "Devices"));
 }
 
 void handleSystem() {
+  if (!requireAuth()) return;
   server.send(200, "text/html", loadPageWithMenu("/system.html", "system", "System"));
 }
 
@@ -147,9 +183,10 @@ void handleSystem() {
  * @brief Logs out the current user.
  */
 void handleLogout() {
-  isAuthenticated = false;
-  server.sendHeader("Location", "/");
-  server.send(302);
+  portal.removeSession(getSessionIdFromCookie());
+  server.sendHeader("Set-Cookie", "sessionId=; Path=/; Max-Age=0");
+  server.sendHeader("Location", "/login.html");
+  server.send(302, "text/plain", "Logged out");
 }
 
 /**

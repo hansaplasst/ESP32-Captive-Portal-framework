@@ -32,6 +32,9 @@ void updatePassword(const String &newpass);
  */
 void sendMobileMessage(int code, const String &title, const String &message, const String &buttonText = "Back", const String &target = "/");
 
+String getSessionIdFromCookie();
+bool requireAuth();
+
 // Route handlers
 void handleRoot();
 void handleLogin();

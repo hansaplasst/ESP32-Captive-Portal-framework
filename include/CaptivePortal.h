@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include <map>
+
 /**
  * @class CaptivePortal
  * @brief Provides a complete captive portal system for ESP32.
@@ -36,7 +38,33 @@ class CaptivePortal {
    */
   void handle();
 
+  /**
+   * @brief Creates a new session ID and stores it with an expiry time.
+   *
+   * @return A new unique session ID string
+   */
+  String createSession();
+
+  /**
+   * @brief Checks if a session ID is valid and not expired.
+   *
+   * @param sid The session ID to validate
+   * @return true if the session is valid
+   * @return false if the session is invalid or expired
+   */
+  bool isSessionValid(const String& sid);
+
+  /**
+   * @brief Removes a session ID from the valid sessions map.
+   *
+   * @param sid The session ID to remove
+   */
+  void removeSession(const String& sid);
+
  private:
+  std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
+  unsigned long sessionTimeout = 3600;            // 1 hour
+
   /**
    * @brief Initializes the WiFi access point.
    *

@@ -141,3 +141,38 @@ void CaptivePortal::handle() {
     espReset();
   }
 }
+
+/**
+ * @brief Creates a new session ID and stores it with an expiry timestamp.
+ */
+String CaptivePortal::createSession() {
+  char buf[33];
+  for (int i = 0; i < 32; i++) {
+    uint8_t r = (uint8_t)esp_random() % 16;
+    buf[i] = "0123456789abcdef"[r];
+  }
+  buf[32] = 0;
+  String sid(buf);
+  validSessions[sid] = millis() + sessionTimeout * 1000UL;
+  return sid;
+}
+
+/**
+ * @brief Checks if a session ID is valid and not expired.
+ */
+bool CaptivePortal::isSessionValid(const String& sid) {
+  auto it = validSessions.find(sid);
+  if (it == validSessions.end()) return false;
+  if (millis() > it->second) {
+    validSessions.erase(it);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Removes a session ID from the valid sessions map.
+ */
+void CaptivePortal::removeSession(const String& sid) {
+  validSessions.erase(sid);
+}
