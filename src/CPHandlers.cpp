@@ -39,7 +39,7 @@ bool CPHandlers::readUser(String &user, String &pass) {
   if (err) return false;
   user = doc["user"]["name"].as<String>();
   pass = doc["user"]["pass"].as<String>();
-  DPRINTF(1, "User: %s, Pass: %s\n", user.c_str(), pass.c_str());
+  DPRINTF(0, "User: %s, Pass: %s", user.c_str(), pass.c_str());
   return true;
 }
 
@@ -94,7 +94,7 @@ String CPHandlers::getSessionIdFromCookie() {
   int semi = sid.indexOf(';');
   if (semi > 0) sid = sid.substring(0, semi);
   sid.trim();
-  DPRINTF(0, "Extracted sessionId: %s\n", sid.c_str());
+  DPRINTF(0, "Extracted sessionId: %s", sid.c_str());
   return sid;
 }
 
@@ -178,7 +178,7 @@ void CPHandlers::handleHome() {
 
   int numHeaders = server->headers();
   for (int i = 0; i < numHeaders; i++) {
-    DPRINTF(0, "Header[%d]: %s = %s\n", i, server->headerName(i).c_str(), server->header(i).c_str());
+    DPRINTF(0, "Header[%d]: %s = %s", i, server->headerName(i).c_str(), server->header(i).c_str());
   }
 
   if (!requireAuth()) return;
@@ -248,7 +248,7 @@ void CPHandlers::handleFirmwareUpload() {
   HTTPUpload &upload = server->upload();
 
   if (upload.status == UPLOAD_FILE_START) {
-    DPRINTF(1, "[OTA] Update start: %s\n", upload.filename.c_str());
+    DPRINTF(1, "[OTA] Update start: %s", upload.filename.c_str());
     if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
       Update.printError(Serial);
     }
@@ -258,7 +258,7 @@ void CPHandlers::handleFirmwareUpload() {
     }
   } else if (upload.status == UPLOAD_FILE_END) {
     if (Update.end(true)) {
-      DPRINTF(1, "[OTA] Update success: %u bytes\n", upload.totalSize);
+      DPRINTF(1, "[OTA] Update success: %u bytes", upload.totalSize);
     } else {
       Update.printError(Serial);
     }

@@ -1,4 +1,5 @@
 #include "PageRenderer.h"
+
 #include <LittleFS.h>
 
 #define FSYS LittleFS
@@ -22,7 +23,11 @@ String loadPageWithMenu(const String &filePath, const String &activeTab, const S
 
   String fullPage = "<!DOCTYPE html><html><head>";
   fullPage += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
-  fullPage += "<link rel=\"stylesheet\" href=\"/styles.css\">";
+
+  // fullPage += "<link rel=\"stylesheet\" href=\"/styles.css\">";
+  fullPage += "<link rel=\"preload\" href=\"/styles.css\" as=\"style\" onload=\"this.rel='stylesheet'\" />";
+  fullPage += "<noscript><link rel=\"stylesheet\" href=\"/styles.css\" /></noscript>";
+
   fullPage += "<title>" + pageTitle + "</title>";
   fullPage += "</head><body>" + menu + body + "</body></html>";
 

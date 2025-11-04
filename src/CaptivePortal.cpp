@@ -18,7 +18,7 @@
  */
 void CaptivePortal::begin(const char* ssid) {
   Serial.begin(115200);
-  DPRINTF(1, "CaptivePortal booting...\n");
+  DPRINTF(1, "CaptivePortal booting...");
 
   pinMode(LEDPIN, OUTPUT);
   pinMode(Settings.ResetPin, INPUT_PULLUP);
@@ -34,7 +34,7 @@ void CaptivePortal::begin(const char* ssid) {
   static const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
   server.collectHeaders(headerKeys, headerKeysCount);
   server.begin();
-  DPRINTF(1, "Webserver started\n");
+  DPRINTF(1, "Webserver started");
 }
 
 /**
@@ -42,7 +42,7 @@ void CaptivePortal::begin(const char* ssid) {
  */
 void CaptivePortal::checkReset() {
   if (!FSYS.begin(false)) {
-    DPRINTF(3, "[LittleFS] Initialization failed!\n");
+    DPRINTF(3, "[LittleFS] Initialization failed!");
     factoryReset();
   }
 
@@ -54,10 +54,10 @@ void CaptivePortal::checkReset() {
  */
 void CaptivePortal::setupFS() {
   if (!FSYS.begin(false)) {
-    DPRINTF(3, "LittleFS mount failed\n");
+    DPRINTF(3, "LittleFS mount failed");
     factoryReset();
   } else {
-    DPRINTF(1, "Mounted LittleFS\n");
+    DPRINTF(1, "Mounted LittleFS");
     File root = FSYS.open("/");
     File file = root.openNextFile();
     if (!Settings.configExists()) {
@@ -65,7 +65,7 @@ void CaptivePortal::setupFS() {
     }
 
     while (file) {
-      DPRINTF(1, "  - %s (%d bytes)\n", file.name(), file.size());
+      DPRINTF(1, "  - %s (%d bytes)", file.name(), file.size());
       file = root.openNextFile();
     }
   }
@@ -133,7 +133,7 @@ void CaptivePortal::handle() {
   server.handleClient();
 
   if (digitalRead(Settings.ResetPin) == LOW) {
-    DPRINTF(2, "[Loop] Reset button pressed during runtime\n");
+    DPRINTF(2, "[Loop] Reset button pressed during runtime");
     espReset();
   }
 }
@@ -158,18 +158,18 @@ String CaptivePortal::createSession() {
  * @brief Checks if a session ID is valid and not expired.
  */
 bool CaptivePortal::isSessionValid(const String& sid) {
-  DPRINTF(0, "[CaptivePortal::isSessionValid] Checking sessionId: %s\n", sid.c_str());
+  DPRINTF(0, "[CaptivePortal::isSessionValid] Checking sessionId: %s", sid.c_str());
   auto it = validSessions.find(sid);
   if (it == validSessions.end()) {
-    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s not found\n", sid.c_str());
+    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s not found", sid.c_str());
     return false;
   }
   if (millis() > it->second) {
-    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s expired\n", sid.c_str());
+    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s expired", sid.c_str());
     validSessions.erase(it);
     return false;
   }
-  DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s is valid\n", sid.c_str());
+  DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s is valid", sid.c_str());
   return true;
 }
 
