@@ -1,14 +1,9 @@
 #include "CaptivePortal.h"
 
-#include <DNSServer.h>
 #include <ESPResetUtil.h>
 #include <LittleFS.h>
-#include <WebServer.h>
 #include <WiFi.h>
 #include <dprintf.h>
-
-#include "CPHandlers.h"
-#include "Config.h"
 
 #ifdef BROWNOUT_HACK
   #include "soc/rtc_cntl_reg.h"
@@ -18,27 +13,26 @@
 #define FSYS LittleFS
 #define DNS_PORT 53
 
-WebServer server(80);  // HTTP server
-DNSServer dnsServer;   // DNS redirect server
-
-CaptivePortal::CaptivePortal() {}
-
 /**
  * @brief Initializes all components of the captive portal.
  */
-void CaptivePortal::begin(const char* ssid, const char* password) {
+void CaptivePortal::begin(const char* ssid) {
   Serial.begin(115200);
   DPRINTF(1, "CaptivePortal booting...\n");
 
   pinMode(LEDPIN, OUTPUT);
   pinMode(Settings.ResetPin, INPUT_PULLUP);
 
-  checkReset();               // Check if reset button is held
-  setupFS();                  // Mount LittleFS and list files
-  setupWiFi(ssid, password);  // Start AP
-  setupDNS();                 // Start DNS redirector
-  setupHandlers();            // Register all route handlers
+  checkReset();  // Check if reset button is held
+  setupFS();     // Mount LittleFS and list files
 
+  setupWiFi(ssid, Settings.AdminPassword);  // Start AP
+  setupDNS();                               // Start DNS redirector
+  setupHandlers();                          // Register all route handlers
+
+  static const char* headerKeys[] = {"Cookie", "Authorization"};
+  static const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
+  server.collectHeaders(headerKeys, headerKeysCount);
   server.begin();
   DPRINTF(1, "Webserver started\n");
 }
@@ -66,8 +60,8 @@ void CaptivePortal::setupFS() {
     DPRINTF(1, "Mounted LittleFS\n");
     File root = FSYS.open("/");
     File file = root.openNextFile();
-    if (!configExists()) {
-      createDefaultConfig();
+    if (!Settings.configExists()) {
+      Settings.createDefaultConfig();
     }
 
     while (file) {
@@ -104,29 +98,31 @@ void CaptivePortal::setupDNS() {
  * @brief Registers all HTTP route handlers.
  */
 void CaptivePortal::setupHandlers() {
+  cph = new CPHandlers(&server, this);
+
   server.serveStatic("/styles.css", FSYS, "/styles.css");
 
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/login", HTTP_POST, handleLogin);
-  server.on("/updatepass", HTTP_POST, handleUpdatePass);
-  server.on("/home", HTTP_GET, handleHome);
-  server.on("/edit", HTTP_GET, handleEdit);
-  server.on("/devices", HTTP_GET, handleDevices);
-  server.on("/system", HTTP_GET, handleSystem);
-  server.on("/logout", HTTP_POST, handleLogout);
-  server.on("/reboot", HTTP_POST, handleReboot);
-  server.on("/factoryreset", HTTP_POST, handleFactoryReset);
+  server.on("/", HTTP_GET, [this]() { cph->handleRoot(); });
+  server.on("/login", HTTP_POST, [this]() { cph->handleLogin(); });
+  server.on("/updatepass", HTTP_POST, [this]() { cph->handleUpdatePass(); });
+  server.on("/home", HTTP_GET, [this]() { cph->handleHome(); });
+  server.on("/edit", HTTP_GET, [this]() { cph->handleEdit(); });
+  server.on("/devices", HTTP_GET, [this]() { cph->handleDevices(); });
+  server.on("/system", HTTP_GET, [this]() { cph->handleSystem(); });
+  server.on("/logout", HTTP_POST, [this]() { cph->handleLogout(); });
+  server.on("/reboot", HTTP_POST, [this]() { cph->handleReboot(); });
+  server.on("/factoryreset", HTTP_POST, [this]() { cph->handleFactoryReset(); });
 
-  server.on("/generate_204", handleCaptive);
-  server.on("/fwlink", handleCaptive);
-  server.on("/hotspot-detect.html", handleCaptive);
-  server.onNotFound(handleCaptive);
+  server.on("/generate_204", [this]() { cph->handleCaptive(); });
+  server.on("/fwlink", [this]() { cph->handleCaptive(); });
+  server.on("/hotspot-detect.html", [this]() { cph->handleCaptive(); });
+  server.onNotFound([this]() { cph->handleCaptive(); });
 
-  server.on("/update", HTTP_POST, handleFirmwareUpdateDone, handleFirmwareUpload);
+  server.on("/update", HTTP_POST, [this]() { cph->handleFirmwareUpdateDone(); }, [this]() { cph->handleFirmwareUpload(); });
 
-  server.on("/listfiles", HTTP_GET, handleListFiles);
-  server.on("/editfile", HTTP_GET, handleEditFileGet);
-  server.on("/editfile", HTTP_POST, handleEditFilePost);
+  server.on("/listfiles", HTTP_GET, [this]() { cph->handleListFiles(); });
+  server.on("/editfile", HTTP_GET, [this]() { cph->handleEditFileGet(); });
+  server.on("/editfile", HTTP_POST, [this]() { cph->handleEditFilePost(); });
 }
 
 /**
@@ -146,6 +142,7 @@ void CaptivePortal::handle() {
  * @brief Creates a new session ID and stores it with an expiry timestamp.
  */
 String CaptivePortal::createSession() {
+  DPRINTF(0, "[CaptivePortal::createSession]");
   char buf[33];
   for (int i = 0; i < 32; i++) {
     uint8_t r = (uint8_t)esp_random() % 16;
@@ -161,12 +158,18 @@ String CaptivePortal::createSession() {
  * @brief Checks if a session ID is valid and not expired.
  */
 bool CaptivePortal::isSessionValid(const String& sid) {
+  DPRINTF(0, "[CaptivePortal::isSessionValid] Checking sessionId: %s\n", sid.c_str());
   auto it = validSessions.find(sid);
-  if (it == validSessions.end()) return false;
+  if (it == validSessions.end()) {
+    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s not found\n", sid.c_str());
+    return false;
+  }
   if (millis() > it->second) {
+    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s expired\n", sid.c_str());
     validSessions.erase(it);
     return false;
   }
+  DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s is valid\n", sid.c_str());
   return true;
 }
 

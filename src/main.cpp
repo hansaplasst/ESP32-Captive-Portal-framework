@@ -6,7 +6,7 @@ CaptivePortal *portal = nullptr;
 
 void setup() {
   portal = new CaptivePortal();
-  portal->begin("ESP32-Login", "12345678");
+  portal->begin("ESP32-Login");
 }
 
 void loop() {

@@ -1,26 +1,35 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/styles.css">
-  <script>
-    function askPassword() {
-      let newpass = prompt("You are using the default admin password.\nPlease set a new password:");
-      if (newpass) {
-        fetch("/updatepass", {
-          method: "POST",
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: "newpass=" + encodeURIComponent(newpass)
-        }).then(() => location.href="/home");
-      } else {
-        location.href="/home";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="preload"
+      href="/styles.css"
+      as="style"
+      onload="this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="/styles.css" /></noscript>
+    <script>
+      function askPassword() {
+        let newpass = prompt(
+          "You are using the default admin password.\nPlease set a new password:"
+        );
+        if (newpass) {
+          fetch("/updatepass", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "newpass=" + encodeURIComponent(newpass),
+          }).then(() => (location.href = "/home"));
+        } else {
+          location.href = "/home";
+        }
       }
-    }
-    window.onload = askPassword;
-  </script>
-</head>
-<body>
-  <h2>Welcome</h2>
-  <p>Preparing to update your password...</p>
-</body>
+      window.onload = askPassword;
+    </script>
+  </head>
+  <body>
+    <h2>Welcome</h2>
+    <p>Preparing to update your password...</p>
+  </body>
 </html>

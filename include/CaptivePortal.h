@@ -2,8 +2,14 @@
 #define CAPTIVE_PORTAL_H
 
 #include <Arduino.h>
+#include <DNSServer.h>
+#include <WebServer.h>
 
 #include <map>
+
+#include "CPHandlers.h"
+#include "Config.h"
+#include "PageRenderer.h"
 
 /**
  * @class CaptivePortal
@@ -18,7 +24,16 @@ class CaptivePortal {
   /**
    * @brief Construct a new Captive Portal object
    */
-  CaptivePortal();
+  CaptivePortal() : server(80), dnsServer() {}
+  ~CaptivePortal() {
+    if (cph) {
+      delete cph;
+      cph = nullptr;
+    }
+  }
+
+  /// Configuration settings for the captive portal
+  CaptivePortalConfig Settings;
 
   /**
    * @brief Initializes the captive portal system.
@@ -28,7 +43,7 @@ class CaptivePortal {
    * @param ssid SSID of the access point (default: "ESP32-Login")
    * @param password Password for the access point (default: "12345678")
    */
-  virtual void begin(const char* ssid = "ESP32-Login", const char* password = "12345678");
+  virtual void begin(const char* ssid = "ESP32-Login");
 
   /**
    * @brief Main loop handler.
@@ -62,6 +77,10 @@ class CaptivePortal {
   void removeSession(const String& sid);
 
  private:
+  WebServer server;
+  DNSServer dnsServer;
+  CPHandlers* cph = nullptr;
+
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour
 
@@ -79,7 +98,7 @@ class CaptivePortal {
   void setupFS();
 
   /**
-   * @brief Registers all HTTP route handlers with the server.
+   * @brief Registers all HTTP route cph with the server.
    */
   void setupHandlers();
 
