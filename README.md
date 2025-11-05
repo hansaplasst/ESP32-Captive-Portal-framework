@@ -47,9 +47,9 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 **WARNING**
 
-Factory reset **removes config.json**. If the file does not exist on the ESP32 default settings from `include/Config.h` will be used to recreate the config.json
+Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate the `/config.json`
 
-- By default GPIO 4 acts as a reset button
+- By default GPIO 4 acts as a reset button.
 - Pull to ground shortly to reboot the ESP32
 - To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly **after 10s**.
 - You can also reboot or reset via the System tab in the Captive Portal web UI
@@ -69,9 +69,7 @@ Default device settings can be modified in `include/Config.h`
 - LedPin: 2; Pin number for the LED indicator
 - ResetPin: 4; Pin number for the reset button
 
-**config.json**
-
-Device and user settings on the ESP32 are stored in `/config.json`
+Device and user settings on the ESP32 are stored in **/config.json**. The file is recreated if it does not exist during boot up
 
 ## Dependencies
 
