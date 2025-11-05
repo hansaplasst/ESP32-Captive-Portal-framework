@@ -55,6 +55,8 @@ Factory reset **removes config.json**. If the file does not exist on the ESP32 d
 
 ## Device Settings
 
+Default device settings can be modified in `include/Config.h`
+
 - ConfigFile: `/config.json` Path to the configuration file in LittleFS
 - AdminUser: `Admin` Default admin username
 - AdminPassword: `password` Default admin password
@@ -66,24 +68,8 @@ Factory reset **removes config.json**. If the file does not exist on the ESP32 d
 - LedPin: 2; Pin number for the LED indicator
 - ResetPin: 4; Pin number for the reset button
 
-# config.json
-
+**config.json**
 Device and user settings on the ESP32 are stored in `/config.json`
-
-# User Settings
-
-- `name`: Administrator name. Default: `Admin`
-- `pass`: Password for logging into the SSID and Captive Portal website. Default: `password`
-- `defaultPass`: Default password. If `pass == defaultpass` during login, the user needs to reset it's password
-
-# Captive Portal Settings
-
-- `hostname`: Captive Portal hostname. Default `esp32-portal`
-- `timezone`: Time zone of the ESP32. Default `Etc/UTC`
-- `IP`: IP Address of the Captive Portal. Default: `192.168.168.168`
-- `IPMask`: IP Mask of the Captive Portal. Default: `255.255.255.0`
-- `ledPin`: ESP32 (buildin) LED. Default: `2`
-- `resetPin`: ESP32 reset pin (see [Reboot and Factory Reset](reboot-and-factory-reset)). Default: `4`
 
 ## Dependencies
 
