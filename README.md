@@ -46,6 +46,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Reboot and Factory Reset
 
 **WARNING**
+
 Factory reset **removes config.json**. If the file does not exist on the ESP32 default settings from `include/Config.h` will be used to recreate the config.json
 
 - By default GPIO 4 acts as a reset button
@@ -69,6 +70,7 @@ Default device settings can be modified in `include/Config.h`
 - ResetPin: 4; Pin number for the reset button
 
 **config.json**
+
 Device and user settings on the ESP32 are stored in `/config.json`
 
 ## Dependencies
