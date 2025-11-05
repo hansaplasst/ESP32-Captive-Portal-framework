@@ -27,7 +27,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## How to use
 
 1. git clone https://github.com/hansaplasst/ESP32-Captive-Portal-framework.git
-2. Configure project settings in: `/include/Config.h`
+2. Configure project default settings in: `/include/Config.h`
 3. Configure `BAUDRATE` and `DEBUG_LEVEL` in: `platformio.ini`
 4. Modify and/or upload `/data/*` files using:`pio run --target uploadfs`
 5. Flash firmware via PlatformIO or via `pio run`
@@ -45,6 +45,9 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 ## Reboot and Factory Reset
 
+**WARNING**
+Factory reset **removes config.json**. If the file does not exist on the ESP32 default settings from `include/Config.h` will be used to recreate the config.json
+
 - By default GPIO 4 acts as a reset button
 - Pull to ground shortly to reboot the ESP32
 - To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly **after 10s**.
@@ -52,7 +55,20 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 ## Device Settings
 
-Device and user settings are stored in `data/config.json`. Modify and upload this file using:`pio run --target uploadfs` to change the default settings.
+- ConfigFile: `/config.json` Path to the configuration file in LittleFS
+- AdminUser: `Admin` Default admin username
+- AdminPassword: `password` Default admin password
+- DefaultPassword: `password` Default admin password
+- DeviceHostname: `esp32-portal` Default device hostname
+- DeviceTimezone: `Etc/UTC` Default device timezone
+- DeviceIP: `192.168.168.168` Default device IP address
+- DeviceIPMask: `255.255.255.0` Default device IP mask
+- LedPin: 2; Pin number for the LED indicator
+- ResetPin: 4; Pin number for the reset button
+
+# config.json
+
+Device and user settings on the ESP32 are stored in `/config.json`
 
 # User Settings
 

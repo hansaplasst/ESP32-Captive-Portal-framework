@@ -18,7 +18,7 @@ class CaptivePortalConfig {
   const char* DefaultPassword = "password";              ///< Default admin password
   const char* DeviceHostname = "esp32-portal";           ///< Default device hostname
   const char* DeviceTimezone = "Etc/UTC";                ///< Default device timezone
-  IPAddress DeviceIP = IPAddress(192, 168, 4, 1);        ///< Default device IP address
+  IPAddress DeviceIP = IPAddress(192, 168, 168, 168);    ///< Default device IP address
   IPAddress DeviceIPMask = IPAddress(255, 255, 255, 0);  ///< Default device IP mask
   uint8_t LedPin = 2;                                    ///< Pin number for the LED indicator
   uint8_t ResetPin = 4;                                  ///< Pin number for the reset button
