@@ -49,7 +49,9 @@ A reusable, responsive captive portal framework for ESP32 built with:
 - **WARNING** -
 ```
 
-Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate `/config.json`
+- ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) `#f03c15`
+
+  Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate `/config.json`
 
 - By default GPIO 4 acts as a reset button.
 - Pull to ground shortly to reboot the ESP32
