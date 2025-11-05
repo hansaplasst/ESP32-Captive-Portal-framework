@@ -31,7 +31,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 3. Configure `BAUDRATE` and `DEBUG_LEVEL` in: `platformio.ini`
 4. Modify and/or upload `/data/*` files using:`pio run --target uploadfs`
 5. Flash firmware via PlatformIO or via `pio run`
-6. Open your phone's network settings and connect to `DeviceHostname`
+6. Open your phone's network settings and connect to `esp32-portal`
 7. Open serial monitor to see debug logs
 
 ## Operation
