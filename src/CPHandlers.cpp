@@ -96,12 +96,12 @@ void CPHandlers::handleLogin() {
   }
 
   if (server->arg("user") == portal->Settings.AdminUser && server->arg("pass") == portal->Settings.AdminPassword) {
+    String sid = portal->createSession();
+    DPRINTF(0, "Login successful, creating sessionId: %s", sid.c_str());
+    server->sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/;");
     if (server->arg("pass") == portal->Settings.DefaultPassword) {
       server->send(200, contentType.texthtml, loadFile("/defaultpass_prompt.html"));
     } else {
-      String sid = portal->createSession();
-      DPRINTF(0, "Login successful, creating sessionId: %s", sid.c_str());
-      server->sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/;");
       server->sendHeader("Location", "/home");
       server->send(302, contentType.textplain, "Redirecting...");
     }
@@ -162,7 +162,7 @@ void CPHandlers::handleLogout() {
   // Remove sessionId from server-side storage
   String sid = getSessionIdFromCookie();
   if (sid.length()) {
-    DPRINTF(1, "Removing sessionId: %s", sid.c_str());
+    DPRINTF(0, "Removing sessionId: %s", sid.c_str());
     portal->removeSession(sid);
   }
 
