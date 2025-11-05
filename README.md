@@ -34,7 +34,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 6. Open your phone's network settings and connect to `esp32-portal`
 7. Open serial monitor to see debug logs
 
-## Operation
+## Captive Portal Operation
 
 1. Power up the ESP32
 2. The Captive portal is operational when the LED flashes _<u>three</u>_ times (see [Device Settings](#device-settings))
@@ -51,8 +51,8 @@ Factory reset removes `/config.json` from the ESP32 file system. If the file doe
 
 - By default GPIO 4 acts as a reset button.
 - Pull to ground shortly to reboot the ESP32
-- To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly _<u>after 10s</u>_.
-- You can also reboot or reset via the System tab in the Captive Portal web UI
+- To trigger a factory default reset. Push the reset button to ground and wait _<u>10 seconds</u>_. Release the reset button if the LED flashes quickly for 3 seconds.
+- You can also reboot or do a factory reset via the System tab in the Captive Portal web UI
 
 ## Device Settings
 
