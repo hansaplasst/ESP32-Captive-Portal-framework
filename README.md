@@ -21,7 +21,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 - `src/main.cpp` → project entrypoint
 - `include/Config.h` → contains the portal configuration.
-- `data/` → contains HTML files (upload via `pio run --target uploadfs`)
+- `data/` → contains the Captive Portal HTML files (upload via `pio run --target uploadfs`)
 - `platformio.ini` → PlatformIO configuration
 
 ## How to use
@@ -34,16 +34,44 @@ A reusable, responsive captive portal framework for ESP32 built with:
 6. Open your phone's network settings and connect to `DeviceHostname`
 7. Open serial monitor to see debug logs
 
-## Factory reset
+## Operation
+
+1. Power up the ESP32
+2. The Captive portal is operational when the ESP32 (buildin) LED if configured flashes \*\*<u>three</u> times (see [Device Settings](#device-settings))
+3. Connect to the device using WiFi and scan for SSID **esp32-portal**. Modify SSID using `CaptivePortal::begin('SSID name')`
+4. Connect to the SSID using the default password: `password`
+5. If your device doesn't connect to the portal automatically then browse to: `http://192.168.168.168`
+6. Login with default user name `Admin` and password `password`
+
+## Reboot and Factory Reset
 
 - By default GPIO 4 acts as a reset button
 - Pull to ground shortly to reboot the ESP32
-- To trigger a factory default reset. Pull to ground (for 10s) until the device led flashes quickly **<u>twice</u>** then release.
+- To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly **after 10s**.
 - You can also reboot or reset via the System tab in the Captive Portal web UI
+
+## Device Settings
+
+Device and user settings are stored in `data/config.json`. Modify and upload this file using:`pio run --target uploadfs` to change the default settings.
+
+# User Settings
+
+- `name`: Administrator name. Default: `Admin`
+- `pass`: Password for logging into the SSID and Captive Portal website. Default: `password`
+- `defaultPass`: Default password. If `pass == defaultpass` during login, the user needs to reset it's password
+
+# Captive Portal Settings
+
+- `hostname`: Captive Portal hostname. Default `esp32-portal`
+- `timezone`: Time zone of the ESP32. Default `Etc/UTC`
+- `IP`: IP Address of the Captive Portal. Default: `192.168.168.168`
+- `IPMask`: IP Mask of the Captive Portal. Default: `255.255.255.0`
+- `ledPin`: ESP32 (buildin) LED. Default: `2`
+- `resetPin`: ESP32 reset pin (see [Reboot and Factory Reset](reboot-and-factory-reset)). Default: `4`
 
 ## Dependencies
 
-- ESPResetUtil
-- ArduinoJson
-- LittleFS
-- ESP32 Arduino Framework
+- [ESPResetUtil](https://github.com/hansaplasst/ESPResetUtil) - Implements [Reboot and Factory Reset](reboot-and-factory-reset)
+- [dprintf](https://github.com/hansaplasst/dprintf) - For debugging
+- [ArduinoJson](https://arduinojson.org/) - **ArduinoJson v7 or higher required**
+- [Espressive ESP32 Arduino Framework](https://github.com/espressif/arduino-esp32)

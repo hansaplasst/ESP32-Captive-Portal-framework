@@ -7,7 +7,7 @@
   "device": {
     "hostname": "esp32-portal",
     "timezone": "Etc/UTC",
-    "IP": "192.168.4.1",
+    "IP": "192.168.168.168",
     "IPMask": "255.255.255.0",
     "ledPin": 2,
     "resetPin": 4

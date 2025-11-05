@@ -61,7 +61,7 @@ void CaptivePortal::begin(const char* ssid) {
   server.begin();
   DPRINTF(1, "Webserver SSID '%s' started on http://%s/", Settings.DeviceHostname, WiFi.softAPIP().toString().c_str());
 
-  blinkLedOnPin(Settings.LedPin, 2, 1000);  // Indicate setup completion
+  blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
 }
 
 /**
