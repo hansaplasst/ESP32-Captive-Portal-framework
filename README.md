@@ -37,8 +37,8 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Operation
 
 1. Power up the ESP32
-2. The Captive portal is operational when the LED flashes \*\*<u>three</u> times (see [Device Settings](#device-settings))
-3. Connect to the device using WiFi and scan for SSID **esp32-portal**. Modify SSID using `CaptivePortal::begin('SSID name')`
+2. The Captive portal is operational when the LED flashes _<u>three</u>_ times (see [Device Settings](#device-settings))
+3. Connect to the device using WiFi and scan for SSID `esp32-portal`. Modify SSID using `CaptivePortal::begin('SSID name')`
 4. Connect to the SSID using the default password: `password`
 5. If your device doesn't connect to the portal automatically then browse to: `http://192.168.168.168`
 6. Login with default user name `Admin` and password `password`
@@ -51,7 +51,7 @@ Factory reset removes `/config.json` from the ESP32 file system. If the file doe
 
 - By default GPIO 4 acts as a reset button.
 - Pull to ground shortly to reboot the ESP32
-- To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly **after 10s**.
+- To trigger a factory default reset. Pull to ground and release when the device LED flashes quickly _<u>after 10s</u>_.
 - You can also reboot or reset via the System tab in the Captive Portal web UI
 
 ## Device Settings
@@ -69,7 +69,7 @@ Default device settings can be modified in `include/Config.h`
 - LedPin: 2; Pin number for the LED indicator
 - ResetPin: 4; Pin number for the reset button
 
-Device and user settings on the ESP32 are stored in **/config.json**. The file is recreated if it does not exist during boot up
+Device and user settings on the ESP32 are stored in `/config.json`. The file is recreated if it does not exist during boot up
 
 ## Dependencies
 
