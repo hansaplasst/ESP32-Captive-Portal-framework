@@ -47,7 +47,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 **WARNING**
 
-Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate the `/config.json`
+Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate `/config.json`
 
 - By default GPIO 4 acts as a reset button.
 - Pull to ground shortly to reboot the ESP32
@@ -73,7 +73,7 @@ Device and user settings on the ESP32 are stored in `/config.json`. The file is 
 
 ## Dependencies
 
-- [ESPResetUtil](https://github.com/hansaplasst/ESPResetUtil) - Implements [Reboot and Factory Reset](reboot-and-factory-reset)
+- [ESPResetUtil](https://github.com/hansaplasst/ESPResetUtil) - Implements [Reboot and Factory Reset](#reboot-and-factory-reset)
 - [dprintf](https://github.com/hansaplasst/dprintf) - For debugging
 - [ArduinoJson](https://arduinojson.org/) - **ArduinoJson v7 or higher required**
 - [Espressive ESP32 Arduino Framework](https://github.com/espressif/arduino-esp32)
