@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,26 +10,111 @@
       onload="this.rel='stylesheet'"
     />
     <noscript><link rel="stylesheet" href="/styles.css" /></noscript>
-    <script>
-      function askPassword() {
-        let newpass = prompt(
-          "You are using the default admin password.\nPlease set a new password:"
-        );
-        if (newpass) {
-          fetch("/updatepass", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "newpass=" + encodeURIComponent(newpass),
-          }).then(() => (location.href = "/home"));
-        } else {
-          location.href = "/home";
-        }
+    <title>Set New Admin Password</title>
+    <style>
+      #error {
+        color: red;
+        font-weight: bold;
+        margin-top: 10px;
       }
-      window.onload = askPassword;
-    </script>
+      #message {
+        display: none;
+        text-align: center;
+        margin-top: 30px;
+        color: red; /* 👈 rood gemaakt */
+        font-weight: bold;
+      }
+    </style>
   </head>
   <body>
-    <h2>Welcome</h2>
-    <p>Preparing to update your password...</p>
+    <div class="container">
+      <h2>Default Password Detected</h2>
+
+      <p style="margin: 16px 0 8px">
+        You are using the default admin password.<br />
+        Please set a new password below:
+      </p>
+
+      <form id="updateForm" accept-charset="UTF-8">
+        <input
+          type="password"
+          id="newpass"
+          name="newpass"
+          placeholder="Enter new password"
+          required
+          autofocus
+        />
+        <input
+          type="password"
+          id="confirmpass"
+          placeholder="Confirm new password"
+          required
+        />
+        <input type="submit" value="Update Password" />
+      </form>
+
+      <form action="/home" method="GET" style="margin-top: 8px">
+        <input type="submit" value="Cancel" />
+      </form>
+
+      <div id="error"></div>
+      <div id="message"></div>
+    </div>
+
+    <script>
+      async function handleSubmit(e) {
+        e.preventDefault();
+
+        const pass1 = document.getElementById("newpass").value.trim();
+        const pass2 = document.getElementById("confirmpass").value.trim();
+        const errorDiv = document.getElementById("error");
+        const msgDiv = document.getElementById("message");
+
+        if (pass1.length === 0 || pass2.length === 0) {
+          errorDiv.textContent = "Both password fields are required.";
+          return;
+        }
+        if (pass1 !== pass2) {
+          errorDiv.textContent = "Passwords do not match. Please try again.";
+          return;
+        }
+
+        errorDiv.textContent = "";
+
+        try {
+          const res = await fetch("/updatepass", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "newpass=" + encodeURIComponent(pass1),
+          });
+
+          if (res.ok) {
+            document.getElementById("updateForm").style.display = "none";
+            msgDiv.innerHTML =
+              "<h3>Password updated successfully.</h3>" +
+              "<p>Please login with the new password.</p>" +
+              "<p>Redirecting to login page...</p>";
+            msgDiv.style.display = "block";
+
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 5000);
+          } else {
+            errorDiv.textContent = "Failed to update password.";
+          }
+        } catch (err) {
+          errorDiv.textContent = "Error updating password.";
+        }
+      }
+
+      document
+        .getElementById("updateForm")
+        .addEventListener("submit", handleSubmit);
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const el = document.getElementById("newpass");
+        if (el) el.focus();
+      });
+    </script>
   </body>
 </html>

@@ -15,7 +15,7 @@
   <body>
     <div class="container">
       <h2>Login</h2>
-      <form action="/login" method="POST" accept-charset="UTF-8">
+      <form id="loginForm" action="/login" method="POST" accept-charset="UTF-8">
         <label for="user">Username</label>
         <input type="text" id="user" name="user" required />
         <label for="pass">Password</label>
@@ -23,5 +23,13 @@
         <input type="submit" value="Login" />
       </form>
     </div>
+
+    <script>
+      // remove whitespace around username before submission
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        const userField = document.getElementById("user");
+        userField.value = userField.value.trim();
+      });
+    </script>
   </body>
 </html>

@@ -1,10 +1,15 @@
 {
   "user": {
     "name": "Admin",
-    "pass": "password"
+    "pass": "p",
+    "defaultPass": "pp"
   },
   "device": {
     "hostname": "esp32-portal",
-    "timezone": "Etc/UTC"
+    "timezone": "Etc/UTC",
+    "IP": "192.168.4.1",
+    "IPMask": "255.255.255.0",
+    "ledPin": 2,
+    "resetPin": 4
   }
 }

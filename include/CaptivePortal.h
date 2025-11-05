@@ -25,12 +25,7 @@ class CaptivePortal {
    * @brief Construct a new Captive Portal object
    */
   CaptivePortal() : server(80), dnsServer() {}
-  ~CaptivePortal() {
-    if (cph) {
-      delete cph;
-      cph = nullptr;
-    }
-  }
+  ~CaptivePortal();
 
   /// Configuration settings for the captive portal
   CaptivePortalConfig Settings;

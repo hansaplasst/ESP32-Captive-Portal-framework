@@ -1,19 +1,43 @@
 <div class="container">
   <h2>System Settings</h2>
+
+  <!-- Change Admin Password -->
   <form
+    id="updatePassForm"
     action="/updatepass"
     method="POST"
-    onsubmit="return confirm('Are you sure you want to change the admin password?');"
+    accept-charset="UTF-8"
+    onsubmit="return validatePasswords() && confirm('Are you sure you want to change the admin password?');"
   >
+    <div
+      id="passError"
+      style="color: red; font-weight: bold; margin-top: 10px"
+    ></div>
     <label for="newpass">Change Admin Password</label>
-    <input type="password" id="newpass" name="newpass" required />
+
+    <input
+      type="password"
+      id="newpass"
+      name="newpass"
+      placeholder="Enter new password"
+      required
+    />
+    <input
+      type="password"
+      id="confirmpass"
+      placeholder="Confirm new password"
+      required
+    />
+
     <input type="submit" value="Update Password" />
   </form>
 
+  <!-- Reboot -->
   <form action="/reboot" method="POST">
     <input type="submit" value="Reboot" />
   </form>
 
+  <!-- Factory reset -->
   <form
     action="/factoryreset"
     method="POST"
@@ -22,6 +46,7 @@
     <input type="submit" value="Factory Reset" />
   </form>
 
+  <!-- Logout -->
   <form action="/logout" method="POST">
     <input type="submit" value="Logout" />
   </form>
@@ -35,7 +60,8 @@
   >
     <p>
       <strong>Tip:</strong> If the file upload button does not work, open this
-      page manually in your browser at <code>http://192.168.4.1/system</code>
+      page manually in your browser at
+      <a href="http://192.168.4.1/system">http://192.168.4.1/system</a>
     </p>
     <input
       type="file"
@@ -43,7 +69,25 @@
       accept=".bin,application/octet-stream"
       required
     />
-
     <input type="submit" value="Upload & Flash" />
   </form>
 </div>
+
+<script>
+  function validatePasswords() {
+    const pass1 = document.getElementById("newpass").value.trim();
+    const pass2 = document.getElementById("confirmpass").value.trim();
+    const err = document.getElementById("passError");
+
+    if (!pass1 || !pass2) {
+      err.textContent = "Both password fields are required.";
+      return false;
+    }
+    if (pass1 !== pass2) {
+      err.textContent = "Passwords do not match. Please try again.";
+      return false;
+    }
+    err.textContent = "";
+    return true;
+  }
+</script>

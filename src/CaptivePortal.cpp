@@ -9,32 +9,59 @@
   #include "soc/rtc_cntl_reg.h"
   #include "soc/soc.h"
 #endif
+#include <ESPmDNS.h>
 
 #define FSYS LittleFS
 #define DNS_PORT 53
+
+CaptivePortal::~CaptivePortal() {
+  if (cph) {
+    delete cph;
+    cph = nullptr;
+  }
+}
 
 /**
  * @brief Initializes all components of the captive portal.
  */
 void CaptivePortal::begin(const char* ssid) {
   Serial.begin(115200);
-  DPRINTF(1, "CaptivePortal booting...");
+  DPRINTF(0, "[CaptivePortal::begin]");
+  DPRINTF(1, "%s booting...", ssid);
 
-  pinMode(LEDPIN, OUTPUT);
+  // Mount LittleFS
+  setupFS();
+
+  // Load / create configuration
+  if (!Settings.loadConfig()) {
+    DPRINTF(3, "Failed to load configuration.");
+    Settings.createConfig();
+  }
+  if (String(Settings.DeviceHostname) != String(ssid)) {
+    DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
+    Settings.DeviceHostname = ssid;
+    Settings.createConfig();
+  }
+
+  setenv("TZ", Settings.DeviceTimezone, 1);
+  tzset();
+
+  pinMode(Settings.LedPin, OUTPUT);
   pinMode(Settings.ResetPin, INPUT_PULLUP);
 
   checkReset();  // Check if reset button is held
-  setupFS();     // Mount LittleFS and list files
 
-  setupWiFi(ssid, Settings.AdminPassword);  // Start AP
-  setupDNS();                               // Start DNS redirector
-  setupHandlers();                          // Register all route handlers
+  setupWiFi(Settings.DeviceHostname, Settings.AdminPassword);  // Start AP
+  setupDNS();                                                  // Start DNS redirector
+  setupHandlers();                                             // Register all route handlers
 
+  // Prepare web server and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
-  static const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
-  server.collectHeaders(headerKeys, headerKeysCount);
+  server.collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
   server.begin();
-  DPRINTF(1, "Webserver started");
+  DPRINTF(1, "Webserver SSID '%s' started on http://%s/", Settings.DeviceHostname, WiFi.softAPIP().toString().c_str());
+
+  blinkLedOnPin(Settings.LedPin, 2, 1000);  // Indicate setup completion
 }
 
 /**
@@ -53,21 +80,20 @@ void CaptivePortal::checkReset() {
  * @brief Mounts the file system and prints file tree.
  */
 void CaptivePortal::setupFS() {
+  DPRINTF(0, "[CaptivePortal::setupFS] Initializing LittleFS...");
   if (!FSYS.begin(false)) {
     DPRINTF(3, "LittleFS mount failed");
     factoryReset();
   } else {
-    DPRINTF(1, "Mounted LittleFS");
+#ifdef DEBUG_LEVEL
+    // List existing files in debug mode
     File root = FSYS.open("/");
     File file = root.openNextFile();
-    if (!Settings.configExists()) {
-      Settings.createDefaultConfig();
-    }
-
     while (file) {
-      DPRINTF(1, "  - %s (%d bytes)", file.name(), file.size());
+      DPRINTF(0, "  %s (%d bytes)", file.name(), file.size());
       file = root.openNextFile();
     }
+#endif
   }
 }
 
@@ -75,6 +101,7 @@ void CaptivePortal::setupFS() {
  * @brief Configures and starts the WiFi access point.
  */
 void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
+  DPRINTF(0, "[CaptivePortal::setupWiFi]");
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // disable brownout
 #endif
@@ -83,6 +110,7 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 1);  // re-enable brownout
 #endif
 
+  DPRINTF(0, "Starting AP SSID: %s", ssid);
   WiFi.softAP(ssid, password);
   delay(100);
 }
@@ -134,7 +162,7 @@ void CaptivePortal::handle() {
 
   if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime");
-    espReset();
+    espReset(Settings.LedPin);
   }
 }
 

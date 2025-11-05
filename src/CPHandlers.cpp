@@ -15,57 +15,16 @@
  * @param server Pointer to the WebServer instance
  * @param portal Pointer to the CaptivePortal instance
  */
-CPHandlers::CPHandlers(WebServer *server, CaptivePortal *portal) {
+CPHandlers::CPHandlers(WebServer* server, CaptivePortal* portal) {
   DPRINTF(0, "[CPHandlers::CPHandlers]");
   this->server = server;
   this->portal = portal;
 }
 
 /**
- * @brief Reads username and password from config.json.
- *
- * @param user Output reference for username
- * @param pass Output reference for password
- * @return true if read successfully
- * @return false if file not found or parse error
- */
-bool CPHandlers::readUser(String &user, String &pass) {
-  DPRINTF(0, "[CPHandlers::readUser]");
-  File f = LittleFS.open(portal->Settings.ConfigFile, "r");
-  if (!f) return false;
-  JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, f);
-  f.close();
-  if (err) return false;
-  user = doc["user"]["name"].as<String>();
-  pass = doc["user"]["pass"].as<String>();
-  DPRINTF(0, "User: %s, Pass: %s", user.c_str(), pass.c_str());
-  return true;
-}
-
-/**
- * @brief Updates the admin password in config.json.
- *
- * @param newpass New password to store
- */
-void CPHandlers::updatePassword(const String &newpass) {
-  DPRINTF(0, "[CPHandlers::updatePassword]");
-  File f = LittleFS.open(portal->Settings.ConfigFile, "r");
-  if (!f) return;
-  JsonDocument doc;
-  DeserializationError err = deserializeJson(doc, f);
-  f.close();
-  if (err) return;
-  doc["user"]["pass"] = newpass;
-  f = LittleFS.open(portal->Settings.ConfigFile, "w");
-  serializeJson(doc, f);
-  f.close();
-}
-
-/**
  * @brief Sends a styled message page to the client with an optional button.
  */
-void CPHandlers::sendMobileMessage(int code, const String &title, const String &message, const String &buttonText, const String &target) {
+void CPHandlers::sendMobileMessage(int code, const String& title, const String& message, const String& buttonText, const String& target) {
   DPRINTF(0, "[CPHandlers::sendMobileMessage]");
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
@@ -136,14 +95,8 @@ void CPHandlers::handleLogin() {
     return;
   }
 
-  String u, p;
-  if (!readUser(u, p)) {
-    server->send(500, contentType.textplain, "Could not read user");
-    return;
-  }
-
-  if (server->arg("user") == u && server->arg("pass") == p) {
-    if (u == portal->Settings.AdminUser && p == portal->Settings.AdminPassword) {
+  if (server->arg("user") == portal->Settings.AdminUser && server->arg("pass") == portal->Settings.AdminPassword) {
+    if (server->arg("pass") == portal->Settings.DefaultPassword) {
       server->send(200, contentType.texthtml, loadFile("/defaultpass_prompt.html"));
     } else {
       String sid = portal->createSession();
@@ -162,11 +115,14 @@ void CPHandlers::handleLogin() {
  */
 void CPHandlers::handleUpdatePass() {
   DPRINTF(0, "[CPHandlers::handleUpdatePass]");
+  if (!requireAuth()) return;
   if (!server->hasArg("newpass")) {
     server->send(400, contentType.textplain, "Missing new password");
     return;
   }
-  updatePassword(server->arg("newpass"));
+  portal->Settings.setAdminPassword(server->arg("newpass").c_str());
+  portal->Settings.createConfig();  // TODO optimize to only update password
+
   handleLogout();
 }
 
@@ -175,12 +131,6 @@ void CPHandlers::handleUpdatePass() {
  */
 void CPHandlers::handleHome() {
   DPRINTF(0, "[CPHandlers::handleHome]");
-
-  int numHeaders = server->headers();
-  for (int i = 0; i < numHeaders; i++) {
-    DPRINTF(0, "Header[%d]: %s = %s", i, server->headerName(i).c_str(), server->header(i).c_str());
-  }
-
   if (!requireAuth()) return;
   server->send(200, contentType.texthtml, loadPageWithMenu("/home.html", "home", "Home"));
 }
@@ -208,8 +158,22 @@ void CPHandlers::handleSystem() {
  */
 void CPHandlers::handleLogout() {
   DPRINTF(0, "[CPHandlers::handleLogout]");
-  portal->removeSession(getSessionIdFromCookie());
-  server->sendHeader("Set-Cookie", "sessionId=; Path=/; Max-Age=0");
+
+  // Remove sessionId from server-side storage
+  String sid = getSessionIdFromCookie();
+  if (sid.length()) {
+    DPRINTF(1, "Removing sessionId: %s", sid.c_str());
+    portal->removeSession(sid);
+  }
+
+  // Make Client-side cookie invalid
+  server->sendHeader("Set-Cookie", "sessionId=deleted; Path=/; Max-Age=0");
+
+  // Disable Cache
+  server->sendHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  server->sendHeader("Pragma", "no-cache");
+
+  // Redirect to login page
   server->sendHeader("Location", "/login");
   server->send(302, contentType.textplain, "Logged out");
 }
@@ -219,7 +183,8 @@ void CPHandlers::handleLogout() {
  */
 void CPHandlers::handleReboot() {
   DPRINTF(0, "[CPHandlers::handleReboot]");
-  espReset();
+  if (!requireAuth()) return;
+  espReset(portal->Settings.LedPin);
 }
 
 /**
@@ -227,6 +192,7 @@ void CPHandlers::handleReboot() {
  */
 void CPHandlers::handleFactoryReset() {
   DPRINTF(0, "[CPHandlers::handleFactoryReset]");
+  if (!requireAuth()) return;
   handleLogout();
   factoryReset();
 }
@@ -245,7 +211,8 @@ void CPHandlers::handleCaptive() {
  */
 void CPHandlers::handleFirmwareUpload() {
   DPRINTF(0, "[CPHandlers::handleFirmwareUpload]");
-  HTTPUpload &upload = server->upload();
+  if (!requireAuth()) return;
+  HTTPUpload& upload = server->upload();
 
   if (upload.status == UPLOAD_FILE_START) {
     DPRINTF(1, "[OTA] Update start: %s", upload.filename.c_str());
@@ -269,6 +236,7 @@ void CPHandlers::handleFirmwareUpload() {
  */
 void CPHandlers::handleFirmwareUpdateDone() {
   DPRINTF(0, "[CPHandlers::handleFirmwareUpdateDone]");
+  if (!requireAuth()) return;
   if (Update.hasError()) {
     server->send(500, contentType.textplain, "❌ Update failed!");
   } else {
@@ -283,6 +251,7 @@ void CPHandlers::handleFirmwareUpdateDone() {
  */
 void CPHandlers::handleListFiles() {
   DPRINTF(0, "[CPHandlers::handleListFiles]");
+  if (!requireAuth()) return;
   String json = "[";
   File root = LittleFS.open("/");
   if (root && root.isDirectory()) {
@@ -304,6 +273,7 @@ void CPHandlers::handleListFiles() {
  */
 void CPHandlers::handleEditFileGet() {
   DPRINTF(0, "[CPHandlers::handleEditFileGet]");
+  if (!requireAuth()) return;
   if (!server->hasArg("name")) {
     server->send(400, contentType.textplain, "Missing filename");
     return;
@@ -326,6 +296,7 @@ void CPHandlers::handleEditFileGet() {
  */
 void CPHandlers::handleEditFilePost() {
   DPRINTF(0, "[CPHandlers::handleEditFilePost]");
+  if (!requireAuth()) return;
   if (!server->hasArg("name") || !server->hasArg("content")) {
     server->send(400, contentType.textplain, "Missing params");
     return;

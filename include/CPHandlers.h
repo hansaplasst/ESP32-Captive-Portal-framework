@@ -7,30 +7,13 @@
 class CaptivePortal;  // Forward declaration
 
 struct CPContentType {
-  const char *textplain = "text/plain; charset=utf-8";
-  const char *texthtml = "text/html; charset=utf-8";
+  const char* textplain = "text/plain; charset=utf-8";
+  const char* texthtml = "text/html; charset=utf-8";
 };
 
 class CPHandlers {
  public:
-  CPHandlers(WebServer *server, CaptivePortal *portal);
-
-  /**
-   * @brief Reads username and password from the config file
-   *
-   * @param user Output reference to store the username
-   * @param pass Output reference to store the password
-   * @return true if credentials were read successfully
-   * @return false if reading failed
-   */
-  bool readUser(String &user, String &pass);
-
-  /**
-   * @brief Updates the admin password in the config file
-   *
-   * @param newpass The new password to store
-   */
-  void updatePassword(const String &newpass);
+  CPHandlers(WebServer* server, CaptivePortal* portal);
 
   /**
    * @brief Sends a styled HTML message to the client with a title and message.
@@ -41,7 +24,7 @@ class CPHandlers {
    * @param buttonText Text for the action button (default: "Back")
    * @param target HREF target for the button (default: "/")
    */
-  void sendMobileMessage(int code, const String &title, const String &message, const String &buttonText = "Back", const String &target = "/");
+  void sendMobileMessage(int code, const String& title, const String& message, const String& buttonText = "Back", const String& target = "/");
 
   String getSessionIdFromCookie();
   bool requireAuth();
@@ -65,8 +48,8 @@ class CPHandlers {
   void handleEditFilePost();
 
  private:
-  WebServer *server;
-  CaptivePortal *portal;
+  WebServer* server;
+  CaptivePortal* portal;
   CPContentType contentType;
 };
 
