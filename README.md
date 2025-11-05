@@ -37,7 +37,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 ## Operation
 
 1. Power up the ESP32
-2. The Captive portal is operational when the (configured) ESP32 LED flashes \*\*<u>three</u> times (see [Device Settings](#device-settings))
+2. The Captive portal is operational when the LED flashes \*\*<u>three</u> times (see [Device Settings](#device-settings))
 3. Connect to the device using WiFi and scan for SSID **esp32-portal**. Modify SSID using `CaptivePortal::begin('SSID name')`
 4. Connect to the SSID using the default password: `password`
 5. If your device doesn't connect to the portal automatically then browse to: `http://192.168.168.168`
