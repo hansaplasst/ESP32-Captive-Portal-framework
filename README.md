@@ -49,7 +49,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 - **WARNING** -
 ```
 
-- ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) `#f03c15`
+- ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png?text=hello) `#f03c15`
 
   Factory reset removes `/config.json` from the ESP32 file system. If the file does not exist on the ESP32, default settings defined in `include/Config.h` will be used to recreate `/config.json`
 
