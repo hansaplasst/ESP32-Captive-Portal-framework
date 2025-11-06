@@ -24,11 +24,16 @@ class CaptivePortal {
   /**
    * @brief Construct a new Captive Portal object
    */
-  CaptivePortal() : server(80), dnsServer() {}
+  CaptivePortal();
   ~CaptivePortal();
 
   /// Configuration settings for the captive portal
   CaptivePortalConfig Settings;
+
+  /**
+   * @brief Initializes the captive portal system.
+   */
+  virtual void begin();
 
   /**
    * @brief Initializes the captive portal system.
@@ -39,7 +44,6 @@ class CaptivePortal {
    * @param password Password for the access point (default: "12345678")
    */
   virtual void begin(const char* ssid);
-  virtual void begin();
 
   /**
    * @brief Main loop handler.
@@ -83,7 +87,7 @@ class CaptivePortal {
   /**
    * @brief Loads configuration from LittleFS or creates defaults.
    */
-  void loadConfig();
+  bool loadConfig();
 
   /**
    * @brief Initializes the WiFi access point.
@@ -94,12 +98,14 @@ class CaptivePortal {
   void setupWiFi(const char* ssid, const char* password);
 
   /**
-   * @brief Initializes LittleFS and prints the file tree.
+   * @brief Mounts the file system and prints file tree.
+   *
+   * @param format If true, formats the file system if mounting fails
    */
-  void setupFS();
+  void setupFS(bool format = false);
 
   /**
-   * @brief Registers all HTTP route cph with the server.
+   * @brief Registers all HTTP route handlers with the server.
    */
   void setupHandlers();
 
