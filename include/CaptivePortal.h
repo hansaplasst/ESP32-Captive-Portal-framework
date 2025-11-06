@@ -48,7 +48,7 @@ class CaptivePortal {
   /**
    * @brief Registers all HTTP route handlers with the server.
    */
-  void setupHandlers();
+  virtual void setupHandlers();
 
   /**
    * @brief Main loop handler.
