@@ -14,6 +14,20 @@
 #define FSYS LittleFS
 #define DNS_PORT 53
 
+CaptivePortal::CaptivePortal() : server(80), dnsServer() {
+  Serial.begin(115200);
+  DPRINTF(0, "[CaptivePortal::CaptivePortal]");
+
+  // Mount LittleFS
+  setupFS(true);  // format if mount fails
+
+  if (!loadConfig()) {
+    DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
+    delay(5000);
+    espReset();
+  }
+}
+
 CaptivePortal::~CaptivePortal() {
   if (cph) {
     delete cph;
@@ -21,19 +35,14 @@ CaptivePortal::~CaptivePortal() {
   }
 }
 
-/**
- * @brief Initializes all components of the captive portal.
- */
+void CaptivePortal::begin() {
+  begin(Settings.DeviceHostname);
+}
+
 void CaptivePortal::begin(const char* ssid) {
-  Serial.begin(115200);
   DPRINTF(0, "[CaptivePortal::begin]");
   DPRINTF(1, "%s booting...", ssid);
 
-  // Mount LittleFS
-  setupFS();
-
-  // Load / create configuration
-  loadConfig();
   if (String(Settings.DeviceHostname) != String(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
     Settings.DeviceHostname = ssid;
@@ -61,11 +70,6 @@ void CaptivePortal::begin(const char* ssid) {
   blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
 }
 
-void CaptivePortal::begin() {
-  loadConfig();
-  begin(Settings.DeviceHostname);
-}
-
 /**
  * @brief Checks if reset button is held and initiates factory reset.
  */
@@ -81,11 +85,11 @@ void CaptivePortal::checkReset() {
 /**
  * @brief Mounts the file system and prints file tree.
  */
-void CaptivePortal::setupFS() {
+void CaptivePortal::setupFS(bool format) {
   DPRINTF(0, "[CaptivePortal::setupFS] Initializing LittleFS...");
   if (!FSYS.begin(false)) {
     DPRINTF(3, "LittleFS mount failed");
-    factoryReset();
+    factoryReset(format);
   } else {
 #ifdef DEBUG_LEVEL
     // List existing files in debug mode
@@ -102,11 +106,10 @@ void CaptivePortal::setupFS() {
 /**
  * @brief Loads configuration from LittleFS or creates defaults.
  */
-void CaptivePortal::loadConfig() {
-  if (!Settings.loadConfig()) {
+bool CaptivePortal::loadConfig() {
+  if (!Settings.loadConfig())
     DPRINTF(3, "Failed to load configuration.");
-    Settings.createConfig();
-  }
+  return Settings.createConfig();
 }
 
 /**
