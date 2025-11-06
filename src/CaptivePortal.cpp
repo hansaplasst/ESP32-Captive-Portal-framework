@@ -33,10 +33,7 @@ void CaptivePortal::begin(const char* ssid) {
   setupFS();
 
   // Load / create configuration
-  if (!Settings.loadConfig()) {
-    DPRINTF(3, "Failed to load configuration.");
-    Settings.createConfig();
-  }
+  loadConfig();
   if (String(Settings.DeviceHostname) != String(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
     Settings.DeviceHostname = ssid;
@@ -62,6 +59,11 @@ void CaptivePortal::begin(const char* ssid) {
   DPRINTF(1, "Webserver SSID '%s' started on http://%s/", Settings.DeviceHostname, WiFi.softAPIP().toString().c_str());
 
   blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
+}
+
+void CaptivePortal::begin() {
+  loadConfig();
+  begin(Settings.DeviceHostname);
 }
 
 /**
@@ -94,6 +96,16 @@ void CaptivePortal::setupFS() {
       file = root.openNextFile();
     }
 #endif
+  }
+}
+
+/**
+ * @brief Loads configuration from LittleFS or creates defaults.
+ */
+void CaptivePortal::loadConfig() {
+  if (!Settings.loadConfig()) {
+    DPRINTF(3, "Failed to load configuration.");
+    Settings.createConfig();
   }
 }
 
