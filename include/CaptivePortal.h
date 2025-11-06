@@ -46,6 +46,11 @@ class CaptivePortal {
   virtual void begin(const char* ssid);
 
   /**
+   * @brief Registers all HTTP route handlers with the server.
+   */
+  void setupHandlers();
+
+  /**
    * @brief Main loop handler.
    *
    * This should be called in the Arduino loop() function. It handles
@@ -103,11 +108,6 @@ class CaptivePortal {
    * @param format If true, formats the file system if mounting fails
    */
   void setupFS(bool format = false);
-
-  /**
-   * @brief Registers all HTTP route handlers with the server.
-   */
-  void setupHandlers();
 
   /**
    * @brief Starts the DNS server for redirecting all queries to the AP.
