@@ -36,7 +36,7 @@ CaptivePortal::~CaptivePortal() {
 }
 
 void CaptivePortal::begin() {
-  begin(Settings.DeviceHostname);
+  begin(Settings.DeviceHostname.c_str());
 }
 
 void CaptivePortal::begin(const char* ssid) {
@@ -49,7 +49,7 @@ void CaptivePortal::begin(const char* ssid) {
     Settings.save();
   }
 
-  setenv("TZ", Settings.DeviceTimezone, 1);
+  setenv("TZ", Settings.DeviceTimezone.c_str(), 1);
   tzset();
 
   pinMode(Settings.LedPin, OUTPUT);
@@ -57,7 +57,7 @@ void CaptivePortal::begin(const char* ssid) {
 
   checkReset();  // Check if reset button is held
 
-  setupWiFi(Settings.DeviceHostname, Settings.AdminPassword);  // Start AP
+  setupWiFi(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str());  // Start AP
   setupDNS();                                                  // Start DNS redirector
   setupHandlers();                                             // Register all route handlers
 

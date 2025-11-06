@@ -4,15 +4,6 @@
 #include <LittleFS.h>
 #include <dprintf.h>
 
-CaptivePortalConfig::~CaptivePortalConfig() {
-  DPRINTF(0, "[CaptivePortalConfig::~CaptivePortalConfig]");
-  freeIfOwned(AdminUser, ownsAdminUser);
-  freeIfOwned(AdminPassword, ownsAdminPassword);
-  freeIfOwned(DefaultPassword, ownsDefaultPassword);
-  freeIfOwned(DeviceHostname, ownsDeviceHostname);
-  freeIfOwned(DeviceTimezone, ownsDeviceTimezone);
-}
-
 /**
  * @brief Checks whether the configuration file exists on the file system.
  *
@@ -40,31 +31,17 @@ bool CaptivePortalConfig::loadConfig() {
   if (err) return false;
 
   // Load user settings
-  const char* user = doc["user"]["name"] | AdminUser;
-  const char* pass = doc["user"]["pass"] | AdminPassword;
-  const char* defaultPass = doc["user"]["defaultPass"] | DefaultPassword;
+  const char* user = doc["user"]["name"] | AdminUser.c_str();
+  const char* pass = doc["user"]["pass"] | AdminPassword.c_str();
+  const char* defaultPass = doc["user"]["defaultPass"] | DefaultPassword.c_str();
 
   // Load device settings from JSON, or use defaults
-  const char* hostname = doc["device"]["hostname"] | DeviceHostname;
-  const char* timezone = doc["device"]["timezone"] | DeviceTimezone;
+  const char* hostname = doc["device"]["hostname"] | DeviceHostname.c_str();
+  const char* timezone = doc["device"]["timezone"] | DeviceTimezone.c_str();
   const char* ipStr = doc["device"]["IP"] | DeviceIP.toString().c_str();
   const char* ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString().c_str();
   uint8_t cLedPin = doc["device"]["ledPin"] | LedPin;
   uint8_t cResetPin = doc["device"]["resetPin"] | ResetPin;
-
-  // TODO: Use String class for easier management? Because now I need to manually free old strings whenever I assign new ones.
-  freeIfOwned(AdminUser, ownsAdminUser);
-  freeIfOwned(AdminPassword, ownsAdminPassword);
-  freeIfOwned(DefaultPassword, ownsDefaultPassword);
-  freeIfOwned(DeviceHostname, ownsDeviceHostname);
-  freeIfOwned(DeviceTimezone, ownsDeviceTimezone);
-
-  assignDup(user, AdminUser, ownsAdminUser);
-  assignDup(pass, AdminPassword, ownsAdminPassword);
-  assignDup(defaultPass, DefaultPassword, ownsDefaultPassword);
-  assignDup(hostname, DeviceHostname, ownsDeviceHostname);
-  assignDup(timezone, DeviceTimezone, ownsDeviceTimezone);
-  // Don't forget to free assignDup'd strings in destructor!!!
 
   if (!DeviceIP.fromString(ipStr) || !DeviceIPMask.fromString(ipMaskStr))
     return false;
@@ -104,25 +81,4 @@ bool CaptivePortalConfig::save() {
     return false;
   }
   return true;
-}
-
-void CaptivePortalConfig::setAdminPassword(const char* newPass) {
-  freeIfOwned(AdminPassword, ownsAdminPassword);
-  assignDup(newPass, AdminPassword, ownsAdminPassword);
-}
-
-void CaptivePortalConfig::freeIfOwned(const char*& p, bool& owns) {
-  if (owns && p) {
-    free((void*)p);
-    p = nullptr;
-    owns = false;
-  }
-}
-
-void CaptivePortalConfig::assignDup(const char* src, const char*& dst, bool& owns) {
-  freeIfOwned(dst, owns);
-  if (src) {
-    dst = strdup(src);
-    owns = (dst != nullptr);
-  }
 }

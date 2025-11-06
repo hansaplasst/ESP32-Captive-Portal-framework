@@ -120,7 +120,7 @@ void CPHandlers::handleUpdatePass() {
     server->send(400, contentType.textplain, "Missing new password");
     return;
   }
-  portal->Settings.setAdminPassword(server->arg("newpass").c_str());
+  portal->Settings.AdminPassword = server->arg("newpass");
   portal->Settings.save();  // TODO optimize to only update password
 
   handleLogout();
