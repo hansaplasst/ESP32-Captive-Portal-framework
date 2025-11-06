@@ -46,7 +46,7 @@ void CaptivePortal::begin(const char* ssid) {
   if (String(Settings.DeviceHostname) != String(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
     Settings.DeviceHostname = ssid;
-    Settings.createConfig();
+    Settings.save();
   }
 
   setenv("TZ", Settings.DeviceTimezone, 1);
@@ -109,7 +109,7 @@ void CaptivePortal::setupFS(bool format) {
 bool CaptivePortal::loadConfig() {
   if (!Settings.loadConfig())
     DPRINTF(3, "Failed to load configuration.");
-  return Settings.createConfig();
+  return Settings.save();
 }
 
 /**

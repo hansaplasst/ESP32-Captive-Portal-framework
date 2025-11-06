@@ -25,7 +25,7 @@ class CaptivePortalConfig {
 
   bool configExists();
   bool loadConfig();
-  bool createConfig();
+  bool save();
   void setAdminPassword(const char* newPass);
 
  private:

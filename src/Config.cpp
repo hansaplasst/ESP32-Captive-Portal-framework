@@ -81,8 +81,8 @@ bool CaptivePortalConfig::loadConfig() {
  * The default values are configurable in Config.h
  *
  */
-bool CaptivePortalConfig::createConfig() {
-  DPRINTF(0, "[CaptivePortalConfig::createConfig]");
+bool CaptivePortalConfig::save() {
+  DPRINTF(0, "[CaptivePortalConfig::save]");
   JsonDocument doc;
   doc["user"]["name"] = AdminUser;
   doc["user"]["pass"] = AdminPassword;
@@ -98,9 +98,9 @@ bool CaptivePortalConfig::createConfig() {
   if (f) {
     serializeJson(doc, f);
     f.close();
-    DPRINTF(0, "Config file created");
+    DPRINTF(0, "Config file saved");
   } else {
-    DPRINTF(3, "Failed to create config file");
+    DPRINTF(3, "Failed to save config file");
     return false;
   }
   return true;

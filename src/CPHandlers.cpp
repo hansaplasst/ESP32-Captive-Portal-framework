@@ -121,7 +121,7 @@ void CPHandlers::handleUpdatePass() {
     return;
   }
   portal->Settings.setAdminPassword(server->arg("newpass").c_str());
-  portal->Settings.createConfig();  // TODO optimize to only update password
+  portal->Settings.save();  // TODO optimize to only update password
 
   handleLogout();
 }
