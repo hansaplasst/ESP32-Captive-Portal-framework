@@ -19,7 +19,7 @@ A reusable, responsive captive portal framework for ESP32 built with:
 
 ## Project Structure
 
-- `src/main.cpp` → project entrypoint
+- `examples/main.cpp` → project entrypoint. Put this file in `src/main.cpp` to test functionality
 - `include/Config.h` → contains the portal configuration.
 - `data/` → contains the Captive Portal HTML files (upload via `pio run --target uploadfs`)
 - `platformio.ini` → PlatformIO configuration
