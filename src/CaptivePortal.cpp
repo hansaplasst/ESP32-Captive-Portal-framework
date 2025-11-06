@@ -151,6 +151,8 @@ void CaptivePortal::setupHandlers() {
   server.on("/listfiles", HTTP_GET, [this]() { cph->handleListFiles(); });
   server.on("/editfile", HTTP_GET, [this]() { cph->handleEditFileGet(); });
   server.on("/editfile", HTTP_POST, [this]() { cph->handleEditFilePost(); });
+
+  server.on("/wifiscan", HTTP_GET, [this]() { cph->handleWiFiScan(); });
 }
 
 /**
@@ -186,18 +188,18 @@ String CaptivePortal::createSession() {
  * @brief Checks if a session ID is valid and not expired.
  */
 bool CaptivePortal::isSessionValid(const String& sid) {
-  DPRINTF(0, "[CaptivePortal::isSessionValid] Checking sessionId: %s", sid.c_str());
+  DPRINTF(0, "[CaptivePortal::isSessionValid]");
   auto it = validSessions.find(sid);
   if (it == validSessions.end()) {
-    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s not found", sid.c_str());
+    DPRINTF(0, " SessionId: %s not found", sid.c_str());
     return false;
   }
   if (millis() > it->second) {
-    DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s expired", sid.c_str());
+    DPRINTF(0, " SessionId: %s expired", sid.c_str());
     validSessions.erase(it);
     return false;
   }
-  DPRINTF(0, "[CaptivePortal::isSessionValid] SessionId: %s is valid", sid.c_str());
+  DPRINTF(0, " SessionId: %s is valid", sid.c_str());
   return true;
 }
 

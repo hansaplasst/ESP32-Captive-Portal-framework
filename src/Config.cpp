@@ -52,6 +52,7 @@ bool CaptivePortalConfig::loadConfig() {
   uint8_t cLedPin = doc["device"]["ledPin"] | LedPin;
   uint8_t cResetPin = doc["device"]["resetPin"] | ResetPin;
 
+  // TODO: Use String class for easier management? Because now I need to manually free old strings whenever I assign new ones.
   freeIfOwned(AdminUser, ownsAdminUser);
   freeIfOwned(AdminPassword, ownsAdminPassword);
   freeIfOwned(DefaultPassword, ownsDefaultPassword);

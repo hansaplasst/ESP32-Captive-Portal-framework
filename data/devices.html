@@ -1,4 +1,195 @@
 <div class="container">
-  <h2>Devices Page</h2>
-  <p>List of connected devices will appear here.</p>
+  <h2>WiFi Devices</h2>
+
+  <div class="controls">
+    <button id="scanWifiBtn">Scan WiFi</button>
+  </div>
+
+  <div class="tablewrap">
+    <table id="wifiTable">
+      <thead>
+        <tr>
+          <th>SSID</th>
+          <th>RSSI</th>
+          <th>Channel</th>
+          <th>Secure</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
+
+<style>
+  .controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  #scanWifiBtn {
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  #scanWifiBtn[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  #scanWifiBtn:hover:not([disabled]) {
+    background-color: #45a047;
+  }
+  .tablewrap {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    white-space: nowrap;
+  }
+  th {
+    text-align: left;
+  }
+
+  /* --- dBm badges --- */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .b-excellent {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+  .b-good {
+    background: #e3f2fd;
+    color: #0d47a1;
+  }
+  .b-fair {
+    background: #fff8e1;
+    color: #8d6e63;
+  }
+  .b-weak {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  .b-poor {
+    background: #ffebee;
+    color: #b71c1c;
+  }
+  .badge small {
+    opacity: 0.8;
+    margin-left: 6px;
+  }
+</style>
+
+<script>
+  const wifiTbody = document.querySelector("#wifiTable tbody");
+  const scanWifiBtn = document.getElementById("scanWifiBtn");
+  let pollTimer = null;
+
+  async function startWifiScan() {
+    scanWifiBtn.disabled = true;
+    scanWifiBtn.textContent = "Scanning…";
+    try {
+      const res = await fetch("/wifiscan?start=1", { cache: "no-store" });
+      const j = await res.json();
+      if (j.status === "started") {
+        pollForResults();
+      } else {
+        enableScanButton();
+      }
+    } catch {
+      enableScanButton();
+    }
+  }
+
+  function enableScanButton() {
+    scanWifiBtn.disabled = false;
+    scanWifiBtn.textContent = "Scan WiFi";
+  }
+
+  async function pollForResults() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      try {
+        const res = await fetch("/wifiscan", { cache: "no-store" });
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          clearInterval(pollTimer);
+          renderWifi(data);
+          enableScanButton();
+          return;
+        }
+
+        if (data && data.status === "running") return;
+
+        clearInterval(pollTimer);
+        enableScanButton();
+      } catch {
+        clearInterval(pollTimer);
+        enableScanButton();
+      }
+    }, 600);
+  }
+
+  function rssiClass(rssi) {
+    if (rssi >= -50) return "b-excellent";
+    if (rssi >= -60) return "b-good";
+    if (rssi >= -70) return "b-fair";
+    if (rssi >= -80) return "b-weak";
+    return "b-poor";
+  }
+
+  function rssiQuality(rssi) {
+    let q = (rssi + 100) * 2;
+    if (q < 0) q = 0;
+    if (q > 100) q = 100;
+    return Math.round(q);
+  }
+
+  function renderWifi(list) {
+    wifiTbody.innerHTML = "";
+    (list || []).forEach((n) => {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      const td3 = document.createElement("td");
+      const td4 = document.createElement("td");
+
+      td1.textContent = n.ssid ?? "";
+
+      const rssi = parseInt(n.rssi, 10) || 0;
+      const badge = document.createElement("span");
+      badge.className = "badge " + rssiClass(rssi);
+      badge.title = `${rssi} dBm (~${rssiQuality(rssi)}%)`;
+      badge.textContent = `${rssi} dBm`;
+      const pct = document.createElement("small");
+      pct.textContent = `~${rssiQuality(rssi)}%`;
+      badge.appendChild(pct);
+      td2.appendChild(badge);
+
+      td3.textContent = n.channel ?? "";
+      td4.textContent = n.secure ? "yes" : "no";
+
+      tr.append(td1, td2, td3, td4);
+      wifiTbody.appendChild(tr);
+    });
+  }
+
+  scanWifiBtn.addEventListener("click", () => startWifiScan());
+</script>

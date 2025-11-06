@@ -4,6 +4,7 @@
 #include <ESPResetUtil.h>
 #include <LittleFS.h>
 #include <Update.h>
+#include <WiFi.h>
 
 #include "CaptivePortal.h"
 #include "Config.h"
@@ -53,7 +54,6 @@ String CPHandlers::getSessionIdFromCookie() {
   int semi = sid.indexOf(';');
   if (semi > 0) sid = sid.substring(0, semi);
   sid.trim();
-  DPRINTF(0, "Extracted sessionId: %s", sid.c_str());
   return sid;
 }
 
@@ -313,4 +313,83 @@ void CPHandlers::handleEditFilePost() {
   file.print(content);
   file.close();
   server->send(200, contentType.textplain, "File saved!");
+}
+
+/**
+ * @brief Asynchronous WiFi scan endpoint.
+ *
+ * GET /wifiscan?start=1  -> starts scan, returns {"status":"started"}
+ * GET /wifiscan          -> if running: {"status":"running"}
+ *                           if failed:  {"status":"failed"}
+ *                           if ready:   [ {ssid, rssi, channel, secure}, ... ]
+ */
+/**
+ * @brief Asynchronous WiFi scan endpoint.
+ *
+ * GET /wifiscan?start=1  -> starts scan, returns {"status":"started"}
+ * GET /wifiscan          -> if running: {"status":"running"}
+ *                           if failed:  {"status":"failed"}
+ *                           if ready:   [ {ssid, rssi, channel, secure}, ... ]
+ */
+void CPHandlers::handleWiFiScan() {
+  DPRINTF(0, "[CPHandlers::handleWiFiScan]");
+  if (!requireAuth()) return;
+
+  // Keep AP alive and ensure STA is enabled for scanning
+  // Important: do NOT restore to AP-only while the async scan is running.
+  if (WiFi.getMode() != WIFI_MODE_APSTA) {
+    WiFi.mode(WIFI_MODE_APSTA);
+    DPRINTF(1, "WiFi.mode -> AP+STA");
+  }
+
+  // Start a new scan?
+  if (server->hasArg("start")) {
+    // Clear any previous results to avoid stale reads
+    WiFi.scanDelete();
+
+    // Start async scan (show_hidden=false for speed; passive=false; 120ms/chan)
+    bool ok = WiFi.scanNetworks(/*async=*/true, /*show_hidden=*/false, /*passive=*/false);
+    if (!ok) {
+      DPRINTF(2, "WiFi.scanNetworks async start FAILED");
+      server->send(200, "application/json", "{\"status\":\"failed\"}");
+      return;
+    }
+    DPRINTF(1, "WiFi.scanNetworks async start OK");
+    server->send(200, "application/json", "{\"status\":\"started\"}");
+    return;
+  }
+
+  // Poll for results
+  int r = WiFi.scanComplete();  // >=0: count, -1: running, -2: failed
+  if (r == WIFI_SCAN_RUNNING) {
+    // Still scanning
+    server->send(200, "application/json", "{\"status\":\"running\"}");
+    return;
+  }
+  if (r == WIFI_SCAN_FAILED) {
+    // DPRINTF(2, "WiFi.scanComplete -> FAILED"); // Ignore false positives
+    server->send(200, "application/json", "{\"status\":\"failed\"}");
+    // Keep AP+STA; next start will reuse it
+    return;
+  }
+
+  // r >= 0 -> results ready
+  DPRINTF(1, "WiFi.scanComplete -> %d networks", r);
+  String json = "[";
+  for (int i = 0; i < r; ++i) {
+    if (i) json += ",";
+    bool secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+    json += "{";
+    json += "\"ssid\":\"" + String(WiFi.SSID(i)) + "\",";
+    json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+    json += "\"channel\":" + String(WiFi.channel(i)) + ",";
+    json += "\"secure\":" + String(secure ? "true" : "false");
+    json += "}";
+  }
+  json += "]";
+
+  WiFi.scanDelete();  // free results
+
+  // We blijven in AP+STA; dat is robuuster voor herhaalde scans
+  server->send(200, "application/json", json);
 }

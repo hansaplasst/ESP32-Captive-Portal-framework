@@ -46,6 +46,7 @@ class CPHandlers {
   void handleListFiles();
   void handleEditFileGet();
   void handleEditFilePost();
+  void handleWiFiScan();
 
  private:
   WebServer* server;
