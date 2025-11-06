@@ -81,7 +81,7 @@ bool CaptivePortalConfig::loadConfig() {
  * The default values are configurable in Config.h
  *
  */
-void CaptivePortalConfig::createConfig() {
+bool CaptivePortalConfig::createConfig() {
   DPRINTF(0, "[CaptivePortalConfig::createConfig]");
   JsonDocument doc;
   doc["user"]["name"] = AdminUser;
@@ -101,7 +101,9 @@ void CaptivePortalConfig::createConfig() {
     DPRINTF(0, "Config file created");
   } else {
     DPRINTF(3, "Failed to create config file");
+    return false;
   }
+  return true;
 }
 
 void CaptivePortalConfig::setAdminPassword(const char* newPass) {
