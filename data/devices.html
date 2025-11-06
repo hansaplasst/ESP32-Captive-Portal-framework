@@ -20,133 +20,14 @@
   </div>
 </div>
 
-<style>
-  .controls {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
-  }
-  #scanWifiBtn {
-    padding: 10px 16px;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    background-color: #4caf50;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  #scanWifiBtn[disabled] {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-  #scanWifiBtn:hover:not([disabled]) {
-    background-color: #45a047;
-  }
-  .tablewrap {
-    overflow-x: auto;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th,
-  td {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-    text-align: left;
-    white-space: nowrap;
-  }
-  th {
-    text-align: left;
-  }
-
-  /* --- dBm badges --- */
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-  .b-excellent {
-    background: #e8f5e9;
-    color: #1b5e20;
-  }
-  .b-good {
-    background: #e3f2fd;
-    color: #0d47a1;
-  }
-  .b-fair {
-    background: #fff8e1;
-    color: #8d6e63;
-  }
-  .b-weak {
-    background: #fff3e0;
-    color: #e65100;
-  }
-  .b-poor {
-    background: #ffebee;
-    color: #b71c1c;
-  }
-  .badge small {
-    opacity: 0.8;
-    margin-left: 6px;
-  }
-</style>
+<link rel="stylesheet" href="/styles.css" />
 
 <script>
   const wifiTbody = document.querySelector("#wifiTable tbody");
   const scanWifiBtn = document.getElementById("scanWifiBtn");
-  let pollTimer = null;
+  let wifiPollTimer = null;
 
-  async function startWifiScan() {
-    scanWifiBtn.disabled = true;
-    scanWifiBtn.textContent = "Scanning…";
-    try {
-      const res = await fetch("/wifiscan?start=1", { cache: "no-store" });
-      const j = await res.json();
-      if (j.status === "started") {
-        pollForResults();
-      } else {
-        enableScanButton();
-      }
-    } catch {
-      enableScanButton();
-    }
-  }
-
-  function enableScanButton() {
-    scanWifiBtn.disabled = false;
-    scanWifiBtn.textContent = "Scan WiFi";
-  }
-
-  async function pollForResults() {
-    clearInterval(pollTimer);
-    pollTimer = setInterval(async () => {
-      try {
-        const res = await fetch("/wifiscan", { cache: "no-store" });
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-          clearInterval(pollTimer);
-          renderWifi(data);
-          enableScanButton();
-          return;
-        }
-
-        if (data && data.status === "running") return;
-
-        clearInterval(pollTimer);
-        enableScanButton();
-      } catch {
-        clearInterval(pollTimer);
-        enableScanButton();
-      }
-    }, 600);
-  }
-
+  // --- Signaalsterkte helpers ---
   function rssiClass(rssi) {
     if (rssi >= -50) return "b-excellent";
     if (rssi >= -60) return "b-good";
@@ -157,11 +38,52 @@
 
   function rssiQuality(rssi) {
     let q = (rssi + 100) * 2;
-    if (q < 0) q = 0;
-    if (q > 100) q = 100;
-    return Math.round(q);
+    return Math.max(0, Math.min(100, Math.round(q)));
   }
 
+  // --- Scan starten ---
+  async function startWifiScan() {
+    scanWifiBtn.disabled = true;
+    scanWifiBtn.textContent = "Scanning…";
+    try {
+      const res = await fetch("/wifiscan?start=1", { cache: "no-store" });
+      const j = await res.json();
+      if (j.status === "started") {
+        pollWifiResults();
+      } else {
+        enableScanButton();
+      }
+    } catch {
+      enableScanButton();
+    }
+  }
+
+  // --- Poll resultaten ---
+  async function pollWifiResults() {
+    clearInterval(wifiPollTimer);
+    wifiPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch("/wifiscan", { cache: "no-store" });
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          clearInterval(wifiPollTimer);
+          renderWifi(data);
+          enableScanButton();
+          return;
+        }
+        if (data && data.status === "running") return;
+
+        clearInterval(wifiPollTimer);
+        enableScanButton();
+      } catch {
+        clearInterval(wifiPollTimer);
+        enableScanButton();
+      }
+    }, 600);
+  }
+
+  // --- Tabel vullen ---
   function renderWifi(list) {
     wifiTbody.innerHTML = "";
     (list || []).forEach((n) => {
@@ -189,7 +111,26 @@
       tr.append(td1, td2, td3, td4);
       wifiTbody.appendChild(tr);
     });
+
+    // Cache resultaten
+    sessionStorage.setItem("wifiScanResults", JSON.stringify(list));
   }
 
-  scanWifiBtn.addEventListener("click", () => startWifiScan());
+  function enableScanButton() {
+    scanWifiBtn.disabled = false;
+    scanWifiBtn.textContent = "Scan WiFi";
+  }
+
+  // --- Herstel cache bij openen ---
+  document.addEventListener("DOMContentLoaded", () => {
+    const cached = sessionStorage.getItem("wifiScanResults");
+    if (cached) {
+      try {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list) && list.length > 0) renderWifi(list);
+      } catch {}
+    }
+  });
+
+  scanWifiBtn.addEventListener("click", startWifiScan);
 </script>
