@@ -38,7 +38,8 @@ class CaptivePortal {
    * @param ssid SSID of the access point (default: "ESP32-Login")
    * @param password Password for the access point (default: "12345678")
    */
-  virtual void begin(const char* ssid = "ESP32-Login");
+  virtual void begin(const char* ssid);
+  virtual void begin();
 
   /**
    * @brief Main loop handler.
@@ -78,6 +79,11 @@ class CaptivePortal {
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour
+
+  /**
+   * @brief Loads configuration from LittleFS or creates defaults.
+   */
+  void loadConfig();
 
   /**
    * @brief Initializes the WiFi access point.
