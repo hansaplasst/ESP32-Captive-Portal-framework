@@ -9,26 +9,16 @@
   #include "soc/rtc_cntl_reg.h"
   #include "soc/soc.h"
 #endif
-#include <ESPmDNS.h>
 
 #define FSYS LittleFS
 #define DNS_PORT 53
 
-CaptivePortal::CaptivePortal() : webServer(80), dnsServer() {
-  Serial.begin(115200);
+CaptivePortal::CaptivePortal() {
   DPRINTF(0, "[CaptivePortal::CaptivePortal]");
-
-  // Mount LittleFS
-  setupFS(true);  // format if mount fails
-
-  if (!loadConfig()) {
-    DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
-    delay(5000);
-    espReset();
-  }
 }
 
 CaptivePortal::~CaptivePortal() {
+  DPRINTF(0, "[CaptivePortal::~CaptivePortal]");
   if (cpHandlers) {
     delete cpHandlers;
     cpHandlers = nullptr;
@@ -36,12 +26,28 @@ CaptivePortal::~CaptivePortal() {
 }
 
 void CaptivePortal::begin() {
+  DPRINTF(0, "[CaptivePortal::begin()]");
+  if (!loadConfig()) {
+    DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
+    delay(5000);
+    espReset();
+  }
+
+  configLoaded = true;
   begin(Settings.DeviceHostname.c_str());
 }
 
 void CaptivePortal::begin(const char* ssid) {
-  DPRINTF(0, "[CaptivePortal::begin]");
+  DPRINTF(0, "[CaptivePortal::begin(ssid)]");
   DPRINTF(1, "%s booting...", ssid);
+
+  if (!configLoaded) {
+    if (!loadConfig()) {
+      DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
+      delay(5000);
+      espReset();
+    }
+  }
 
   if (!Settings.DeviceHostname.equals(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
@@ -63,8 +69,8 @@ void CaptivePortal::begin(const char* ssid) {
 
   // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
-  webServer.collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
-  webServer.begin();
+  webServer->collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
+  webServer->begin();
   DPRINTF(1, "Webserver SSID '%s' started on http://%s/",
           Settings.DeviceHostname.c_str(), WiFi.softAPIP().toString().c_str());
 
@@ -108,6 +114,8 @@ void CaptivePortal::setupFS(bool format) {
  * @brief Loads configuration from LittleFS or creates defaults.
  */
 bool CaptivePortal::loadConfig() {
+  setupFS(true);  // format if mount fails
+
   if (!Settings.loadConfig()) {
     DPRINTF(3, "Failed to load configuration.");
     return Settings.save();
@@ -137,48 +145,48 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
  * @brief Starts DNS webServer to redirect all hostnames to AP IP.
  */
 void CaptivePortal::setupDNS() {
-  dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
+  dnsServer->start(DNS_PORT, "*", WiFi.softAPIP());
 }
 
 /**
  * @brief Registers all HTTP route handlers.
  */
 void CaptivePortal::setupHandlers() {
-  cpHandlers = new CPHandlers(&webServer, this);
+  cpHandlers = new CPHandlers(webServer, this);
 
-  webServer.serveStatic("/styles.css", FSYS, "/styles.css");
+  webServer->serveStatic("/styles.css", FSYS, "/styles.css");
 
-  webServer.on("/", HTTP_GET, [this]() { cpHandlers->handleRoot(); });
-  webServer.on("/login", HTTP_POST, [this]() { cpHandlers->handleLogin(); });
-  webServer.on("/updatepass", HTTP_POST, [this]() { cpHandlers->handleUpdatePass(); });
-  webServer.on("/home", HTTP_GET, [this]() { cpHandlers->handleHome(); });
-  webServer.on("/edit", HTTP_GET, [this]() { cpHandlers->handleEdit(); });
-  webServer.on("/devices", HTTP_GET, [this]() { cpHandlers->handleDevices(); });
-  webServer.on("/system", HTTP_GET, [this]() { cpHandlers->handleSystem(); });
-  webServer.on("/logout", HTTP_POST, [this]() { cpHandlers->handleLogout(); });
-  webServer.on("/reboot", HTTP_POST, [this]() { cpHandlers->handleReboot(); });
-  webServer.on("/factoryreset", HTTP_POST, [this]() { cpHandlers->handleFactoryReset(); });
+  webServer->on("/", HTTP_GET, [this]() { cpHandlers->handleRoot(); });
+  webServer->on("/login", HTTP_POST, [this]() { cpHandlers->handleLogin(); });
+  webServer->on("/updatepass", HTTP_POST, [this]() { cpHandlers->handleUpdatePass(); });
+  webServer->on("/home", HTTP_GET, [this]() { cpHandlers->handleHome(); });
+  webServer->on("/edit", HTTP_GET, [this]() { cpHandlers->handleEdit(); });
+  webServer->on("/devices", HTTP_GET, [this]() { cpHandlers->handleDevices(); });
+  webServer->on("/system", HTTP_GET, [this]() { cpHandlers->handleSystem(); });
+  webServer->on("/logout", HTTP_POST, [this]() { cpHandlers->handleLogout(); });
+  webServer->on("/reboot", HTTP_POST, [this]() { cpHandlers->handleReboot(); });
+  webServer->on("/factoryreset", HTTP_POST, [this]() { cpHandlers->handleFactoryReset(); });
 
-  webServer.on("/generate_204", [this]() { cpHandlers->handleCaptive(); });
-  webServer.on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
-  webServer.on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
-  webServer.onNotFound([this]() { cpHandlers->handleCaptive(); });
+  webServer->on("/generate_204", [this]() { cpHandlers->handleCaptive(); });
+  webServer->on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
+  webServer->on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
+  webServer->onNotFound([this]() { cpHandlers->handleCaptive(); });
 
-  webServer.on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
+  webServer->on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
 
-  webServer.on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
-  webServer.on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
-  webServer.on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
+  webServer->on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
+  webServer->on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
+  webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
 
-  webServer.on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
+  webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
 }
 
 /**
  * @brief Handles DNS and HTTP traffic and watches reset pin.
  */
 void CaptivePortal::handle() {
-  dnsServer.processNextRequest();
-  webServer.handleClient();
+  dnsServer->processNextRequest();
+  webServer->handleClient();
 
   if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime");

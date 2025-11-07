@@ -82,11 +82,11 @@ class CaptivePortal {
   void removeSession(const String& sid);
 
  protected:
-  WebServer webServer;
+  WebServer* webServer = new WebServer(80);
   CPHandlers* cpHandlers = nullptr;
 
  private:
-  DNSServer dnsServer;
+  DNSServer* dnsServer = new DNSServer();
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour
@@ -95,6 +95,7 @@ class CaptivePortal {
    * @brief Loads configuration from LittleFS or creates defaults.
    */
   bool loadConfig();
+  bool configLoaded = false;
 
   /**
    * @brief Initializes the WiFi access point.
@@ -120,8 +121,6 @@ class CaptivePortal {
    * @brief Checks the reset button and performs factory reset if held.
    */
   void checkReset();
-
-  bool fsReady = false;  ///< Flag indicating whether the file system is initialized
 };
 
 #endif  // CAPTIVE_PORTAL_H

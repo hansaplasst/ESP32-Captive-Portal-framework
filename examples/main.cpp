@@ -5,6 +5,7 @@
 CaptivePortal* portal = nullptr;
 
 void setup() {
+  Serial.begin(115200);
   portal = new CaptivePortal();
   portal->begin();
 }
