@@ -176,6 +176,7 @@ void CaptivePortal::setupHandlers() {
   webServer->on("/success.txt", HTTP_GET, [this]() { webServer->send(200, "text/plain", "Success"); });
   webServer->on("/favicon.ico", HTTP_GET, [this]() { webServer->send(204, "image/x-icon", ""); });
   webServer->on("/generate_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
+  webServer->on("/gen_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
 
   // Redirect all other requests to captive portal
   webServer->on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
