@@ -46,11 +46,6 @@ class CaptivePortal {
   virtual void begin(const char* ssid);
 
   /**
-   * @brief Registers all HTTP route handlers with the webServer.
-   */
-  virtual void setupHandlers();
-
-  /**
    * @brief Main loop handler.
    *
    * This should be called in the Arduino loop() function. It handles
@@ -116,6 +111,11 @@ class CaptivePortal {
    * @brief Starts the DNS webServer for redirecting all queries to the AP.
    */
   void setupDNS();
+
+  /**
+   * @brief Registers all HTTP route handlers with the webServer.
+   */
+  void setupHandlers();
 
   /**
    * @brief Checks the reset button and performs factory reset if held.
