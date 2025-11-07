@@ -24,7 +24,7 @@ class CaptivePortalConfig {
 
   bool configExists();
   bool loadConfig();
-  bool save();
+  bool save(bool defaultValues = false);  ///< Saves the configuration to LittleFS
 };
 
 #endif  // CP_CONFIG_H

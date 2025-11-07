@@ -118,7 +118,7 @@ bool CaptivePortal::loadConfig() {
 
   if (!Settings.loadConfig()) {
     DPRINTF(3, "Failed to load configuration.");
-    return Settings.save();
+    return Settings.save(true);  // save default values
   }
   return true;
 }
