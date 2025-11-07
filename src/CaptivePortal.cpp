@@ -14,7 +14,7 @@
 #define FSYS LittleFS
 #define DNS_PORT 53
 
-CaptivePortal::CaptivePortal() : server(80), dnsServer() {
+CaptivePortal::CaptivePortal() : webServer(80), dnsServer() {
   Serial.begin(115200);
   DPRINTF(0, "[CaptivePortal::CaptivePortal]");
 
@@ -43,9 +43,9 @@ void CaptivePortal::begin(const char* ssid) {
   DPRINTF(0, "[CaptivePortal::begin]");
   DPRINTF(1, "%s booting...", ssid);
 
-  if (String(Settings.DeviceHostname) != String(ssid)) {
+  if (!Settings.DeviceHostname.equals(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
-    Settings.DeviceHostname = ssid;
+    Settings.DeviceHostname = String(ssid);
     Settings.save();
   }
 
@@ -58,14 +58,15 @@ void CaptivePortal::begin(const char* ssid) {
   checkReset();  // Check if reset button is held
 
   setupWiFi(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str());  // Start AP
-  setupDNS();                                                  // Start DNS redirector
-  setupHandlers();                                             // Register all route handlers
+  setupDNS();                                                                  // Start DNS redirector
+  setupHandlers();                                                             // Register all route handlers
 
-  // Prepare web server and headers to collect
+  // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
-  server.collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
-  server.begin();
-  DPRINTF(1, "Webserver SSID '%s' started on http://%s/", Settings.DeviceHostname, WiFi.softAPIP().toString().c_str());
+  webServer.collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
+  webServer.begin();
+  DPRINTF(1, "Webserver SSID '%s' started on http://%s/",
+          Settings.DeviceHostname.c_str(), WiFi.softAPIP().toString().c_str());
 
   blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
 }
@@ -107,9 +108,11 @@ void CaptivePortal::setupFS(bool format) {
  * @brief Loads configuration from LittleFS or creates defaults.
  */
 bool CaptivePortal::loadConfig() {
-  if (!Settings.loadConfig())
+  if (!Settings.loadConfig()) {
     DPRINTF(3, "Failed to load configuration.");
-  return Settings.save();
+    return Settings.save();
+  }
+  return true;
 }
 
 /**
@@ -131,7 +134,7 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
 }
 
 /**
- * @brief Starts DNS server to redirect all hostnames to AP IP.
+ * @brief Starts DNS webServer to redirect all hostnames to AP IP.
  */
 void CaptivePortal::setupDNS() {
   dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
@@ -141,33 +144,33 @@ void CaptivePortal::setupDNS() {
  * @brief Registers all HTTP route handlers.
  */
 void CaptivePortal::setupHandlers() {
-  cph = new CPHandlers(&server, this);
+  cph = new CPHandlers(&webServer, this);
 
-  server.serveStatic("/styles.css", FSYS, "/styles.css");
+  webServer.serveStatic("/styles.css", FSYS, "/styles.css");
 
-  server.on("/", HTTP_GET, [this]() { cph->handleRoot(); });
-  server.on("/login", HTTP_POST, [this]() { cph->handleLogin(); });
-  server.on("/updatepass", HTTP_POST, [this]() { cph->handleUpdatePass(); });
-  server.on("/home", HTTP_GET, [this]() { cph->handleHome(); });
-  server.on("/edit", HTTP_GET, [this]() { cph->handleEdit(); });
-  server.on("/devices", HTTP_GET, [this]() { cph->handleDevices(); });
-  server.on("/system", HTTP_GET, [this]() { cph->handleSystem(); });
-  server.on("/logout", HTTP_POST, [this]() { cph->handleLogout(); });
-  server.on("/reboot", HTTP_POST, [this]() { cph->handleReboot(); });
-  server.on("/factoryreset", HTTP_POST, [this]() { cph->handleFactoryReset(); });
+  webServer.on("/", HTTP_GET, [this]() { cph->handleRoot(); });
+  webServer.on("/login", HTTP_POST, [this]() { cph->handleLogin(); });
+  webServer.on("/updatepass", HTTP_POST, [this]() { cph->handleUpdatePass(); });
+  webServer.on("/home", HTTP_GET, [this]() { cph->handleHome(); });
+  webServer.on("/edit", HTTP_GET, [this]() { cph->handleEdit(); });
+  webServer.on("/devices", HTTP_GET, [this]() { cph->handleDevices(); });
+  webServer.on("/system", HTTP_GET, [this]() { cph->handleSystem(); });
+  webServer.on("/logout", HTTP_POST, [this]() { cph->handleLogout(); });
+  webServer.on("/reboot", HTTP_POST, [this]() { cph->handleReboot(); });
+  webServer.on("/factoryreset", HTTP_POST, [this]() { cph->handleFactoryReset(); });
 
-  server.on("/generate_204", [this]() { cph->handleCaptive(); });
-  server.on("/fwlink", [this]() { cph->handleCaptive(); });
-  server.on("/hotspot-detect.html", [this]() { cph->handleCaptive(); });
-  server.onNotFound([this]() { cph->handleCaptive(); });
+  webServer.on("/generate_204", [this]() { cph->handleCaptive(); });
+  webServer.on("/fwlink", [this]() { cph->handleCaptive(); });
+  webServer.on("/hotspot-detect.html", [this]() { cph->handleCaptive(); });
+  webServer.onNotFound([this]() { cph->handleCaptive(); });
 
-  server.on("/update", HTTP_POST, [this]() { cph->handleFirmwareUpdateDone(); }, [this]() { cph->handleFirmwareUpload(); });
+  webServer.on("/update", HTTP_POST, [this]() { cph->handleFirmwareUpdateDone(); }, [this]() { cph->handleFirmwareUpload(); });
 
-  server.on("/listfiles", HTTP_GET, [this]() { cph->handleListFiles(); });
-  server.on("/editfile", HTTP_GET, [this]() { cph->handleEditFileGet(); });
-  server.on("/editfile", HTTP_POST, [this]() { cph->handleEditFilePost(); });
+  webServer.on("/listfiles", HTTP_GET, [this]() { cph->handleListFiles(); });
+  webServer.on("/editfile", HTTP_GET, [this]() { cph->handleEditFileGet(); });
+  webServer.on("/editfile", HTTP_POST, [this]() { cph->handleEditFilePost(); });
 
-  server.on("/wifiscan", HTTP_GET, [this]() { cph->handleWiFiScan(); });
+  webServer.on("/wifiscan", HTTP_GET, [this]() { cph->handleWiFiScan(); });
 }
 
 /**
@@ -175,7 +178,7 @@ void CaptivePortal::setupHandlers() {
  */
 void CaptivePortal::handle() {
   dnsServer.processNextRequest();
-  server.handleClient();
+  webServer.handleClient();
 
   if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime");
