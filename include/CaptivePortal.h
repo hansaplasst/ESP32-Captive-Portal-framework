@@ -15,8 +15,8 @@
  * @class CaptivePortal
  * @brief Provides a complete captive portal system for ESP32.
  *
- * This class sets up a WiFi access point, a DNS server for redirection,
- * a web server to serve a LittleFS-based UI, and includes functionality for
+ * This class sets up a WiFi access point, a DNS webServer for redirection,
+ * a web webServer to serve a LittleFS-based UI, and includes functionality for
  * login, password management, reboot and factory reset.
  */
 class CaptivePortal {
@@ -46,7 +46,7 @@ class CaptivePortal {
   virtual void begin(const char* ssid);
 
   /**
-   * @brief Registers all HTTP route handlers with the server.
+   * @brief Registers all HTTP route handlers with the webServer.
    */
   virtual void setupHandlers();
 
@@ -54,7 +54,7 @@ class CaptivePortal {
    * @brief Main loop handler.
    *
    * This should be called in the Arduino loop() function. It handles
-   * DNS requests, HTTP server traffic, and checks the reset pin.
+   * DNS requests, HTTP webServer traffic, and checks the reset pin.
    */
   void handle();
 
@@ -81,8 +81,9 @@ class CaptivePortal {
    */
   void removeSession(const String& sid);
 
+  WebServer webServer;
+
  private:
-  WebServer server;
   DNSServer dnsServer;
   CPHandlers* cph = nullptr;
 
@@ -110,7 +111,7 @@ class CaptivePortal {
   void setupFS(bool format = false);
 
   /**
-   * @brief Starts the DNS server for redirecting all queries to the AP.
+   * @brief Starts the DNS webServer for redirecting all queries to the AP.
    */
   void setupDNS();
 

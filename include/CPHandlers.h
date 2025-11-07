@@ -13,7 +13,7 @@ struct CPContentType {
 
 class CPHandlers {
  public:
-  CPHandlers(WebServer* server, CaptivePortal* portal);
+  CPHandlers(WebServer* webServer, CaptivePortal* portal);
 
   /**
    * @brief Sends a styled HTML message to the client with a title and message.
@@ -49,7 +49,7 @@ class CPHandlers {
   void handleWiFiScan();
 
  private:
-  WebServer* server;
+  WebServer* webServer;
   CaptivePortal* portal;
   CPContentType contentType;
 };
