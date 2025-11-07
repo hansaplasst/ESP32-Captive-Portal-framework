@@ -81,11 +81,12 @@ class CaptivePortal {
    */
   void removeSession(const String& sid);
 
+ protected:
   WebServer webServer;
+  CPHandlers* cpHandlers = nullptr;
 
  private:
   DNSServer dnsServer;
-  CPHandlers* cph = nullptr;
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour

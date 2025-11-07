@@ -29,9 +29,9 @@ CaptivePortal::CaptivePortal() : webServer(80), dnsServer() {
 }
 
 CaptivePortal::~CaptivePortal() {
-  if (cph) {
-    delete cph;
-    cph = nullptr;
+  if (cpHandlers) {
+    delete cpHandlers;
+    cpHandlers = nullptr;
   }
 }
 
@@ -144,33 +144,33 @@ void CaptivePortal::setupDNS() {
  * @brief Registers all HTTP route handlers.
  */
 void CaptivePortal::setupHandlers() {
-  cph = new CPHandlers(&webServer, this);
+  cpHandlers = new CPHandlers(&webServer, this);
 
   webServer.serveStatic("/styles.css", FSYS, "/styles.css");
 
-  webServer.on("/", HTTP_GET, [this]() { cph->handleRoot(); });
-  webServer.on("/login", HTTP_POST, [this]() { cph->handleLogin(); });
-  webServer.on("/updatepass", HTTP_POST, [this]() { cph->handleUpdatePass(); });
-  webServer.on("/home", HTTP_GET, [this]() { cph->handleHome(); });
-  webServer.on("/edit", HTTP_GET, [this]() { cph->handleEdit(); });
-  webServer.on("/devices", HTTP_GET, [this]() { cph->handleDevices(); });
-  webServer.on("/system", HTTP_GET, [this]() { cph->handleSystem(); });
-  webServer.on("/logout", HTTP_POST, [this]() { cph->handleLogout(); });
-  webServer.on("/reboot", HTTP_POST, [this]() { cph->handleReboot(); });
-  webServer.on("/factoryreset", HTTP_POST, [this]() { cph->handleFactoryReset(); });
+  webServer.on("/", HTTP_GET, [this]() { cpHandlers->handleRoot(); });
+  webServer.on("/login", HTTP_POST, [this]() { cpHandlers->handleLogin(); });
+  webServer.on("/updatepass", HTTP_POST, [this]() { cpHandlers->handleUpdatePass(); });
+  webServer.on("/home", HTTP_GET, [this]() { cpHandlers->handleHome(); });
+  webServer.on("/edit", HTTP_GET, [this]() { cpHandlers->handleEdit(); });
+  webServer.on("/devices", HTTP_GET, [this]() { cpHandlers->handleDevices(); });
+  webServer.on("/system", HTTP_GET, [this]() { cpHandlers->handleSystem(); });
+  webServer.on("/logout", HTTP_POST, [this]() { cpHandlers->handleLogout(); });
+  webServer.on("/reboot", HTTP_POST, [this]() { cpHandlers->handleReboot(); });
+  webServer.on("/factoryreset", HTTP_POST, [this]() { cpHandlers->handleFactoryReset(); });
 
-  webServer.on("/generate_204", [this]() { cph->handleCaptive(); });
-  webServer.on("/fwlink", [this]() { cph->handleCaptive(); });
-  webServer.on("/hotspot-detect.html", [this]() { cph->handleCaptive(); });
-  webServer.onNotFound([this]() { cph->handleCaptive(); });
+  webServer.on("/generate_204", [this]() { cpHandlers->handleCaptive(); });
+  webServer.on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
+  webServer.on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
+  webServer.onNotFound([this]() { cpHandlers->handleCaptive(); });
 
-  webServer.on("/update", HTTP_POST, [this]() { cph->handleFirmwareUpdateDone(); }, [this]() { cph->handleFirmwareUpload(); });
+  webServer.on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
 
-  webServer.on("/listfiles", HTTP_GET, [this]() { cph->handleListFiles(); });
-  webServer.on("/editfile", HTTP_GET, [this]() { cph->handleEditFileGet(); });
-  webServer.on("/editfile", HTTP_POST, [this]() { cph->handleEditFilePost(); });
+  webServer.on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
+  webServer.on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
+  webServer.on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
 
-  webServer.on("/wifiscan", HTTP_GET, [this]() { cph->handleWiFiScan(); });
+  webServer.on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
 }
 
 /**
