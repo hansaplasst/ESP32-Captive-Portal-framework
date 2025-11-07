@@ -166,19 +166,17 @@ void CaptivePortal::setupHandlers() {
   webServer->on("/logout", HTTP_POST, [this]() { cpHandlers->handleLogout(); });
   webServer->on("/reboot", HTTP_POST, [this]() { cpHandlers->handleReboot(); });
   webServer->on("/factoryreset", HTTP_POST, [this]() { cpHandlers->handleFactoryReset(); });
+  webServer->on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
+  webServer->on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
+  webServer->on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
+  webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
+  webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
 
+  // Redirect all other requests to captive portal
   webServer->on("/generate_204", [this]() { cpHandlers->handleCaptive(); });
   webServer->on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
   webServer->on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
   webServer->onNotFound([this]() { cpHandlers->handleCaptive(); });
-
-  webServer->on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
-
-  webServer->on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
-  webServer->on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
-  webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
-
-  webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
 }
 
 /**

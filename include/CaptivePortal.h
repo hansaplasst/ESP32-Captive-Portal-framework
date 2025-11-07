@@ -80,6 +80,11 @@ class CaptivePortal {
   WebServer* webServer = new WebServer(80);
   CPHandlers* cpHandlers = nullptr;
 
+  /**
+   * @brief Registers all HTTP route handlers with the webServer.
+   */
+  virtual void setupHandlers();
+
  private:
   DNSServer* dnsServer = new DNSServer();
 
@@ -111,11 +116,6 @@ class CaptivePortal {
    * @brief Starts the DNS webServer for redirecting all queries to the AP.
    */
   void setupDNS();
-
-  /**
-   * @brief Registers all HTTP route handlers with the webServer.
-   */
-  void setupHandlers();
 
   /**
    * @brief Checks the reset button and performs factory reset if held.
