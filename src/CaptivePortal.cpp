@@ -172,13 +172,8 @@ void CaptivePortal::setupHandlers() {
   webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
   webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
 
-  // Silence useless requests
-  webServer->on("/success.txt", HTTP_GET, [this]() { webServer->send(200, "text/plain", "Success"); });
-  webServer->on("/favicon.ico", HTTP_GET, [this]() { webServer->send(204, "image/x-icon", ""); });
-  webServer->on("/generate_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
-  webServer->on("/gen_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
-
   // Redirect all other requests to captive portal
+  webServer->on("/generate_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
   webServer->on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
   webServer->on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
   webServer->onNotFound([this]() { cpHandlers->handleCaptive(); });
