@@ -20,7 +20,7 @@ bool CaptivePortalConfig::configExists() {
  * If the file or any fields are missing, defaults are retained.
  */
 bool CaptivePortalConfig::loadConfig() {
-  DPRINTF(0, "[CaptivePortalConfig::loadConfig]%s", ConfigFile);
+  DPRINTF(0, "[CaptivePortalConfig::loadConfig] %s", ConfigFile);
 
   File f = LittleFS.open(ConfigFile, "r");
   if (!f) return false;
@@ -31,20 +31,35 @@ bool CaptivePortalConfig::loadConfig() {
   if (err) return false;
 
   // Load user settings
-  const char* user = doc["user"]["name"] | AdminUser.c_str();
-  const char* pass = doc["user"]["pass"] | AdminPassword.c_str();
-  const char* defaultPass = doc["user"]["defaultPass"] | DefaultPassword.c_str();
+  String user = doc["user"]["name"] | AdminUser;
+  String pass = doc["user"]["pass"] | AdminPassword;
+  String defaultPass = doc["user"]["defaultPass"] | DefaultPassword;
 
   // Load device settings from JSON, or use defaults
-  const char* hostname = doc["device"]["hostname"] | DeviceHostname.c_str();
-  const char* timezone = doc["device"]["timezone"] | DeviceTimezone.c_str();
-  const char* ipStr = doc["device"]["IP"] | DeviceIP.toString().c_str();
-  const char* ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString().c_str();
+  String hostname = doc["device"]["hostname"] | DeviceHostname;
+  String timezone = doc["device"]["timezone"] | DeviceTimezone;
+  String ipStr = doc["device"]["IP"] | DeviceIP.toString();
+  String ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString();
   uint8_t cLedPin = doc["device"]["ledPin"] | LedPin;
   uint8_t cResetPin = doc["device"]["resetPin"] | ResetPin;
+  LedPin = cLedPin;
+  ResetPin = cResetPin;
 
   if (!DeviceIP.fromString(ipStr) || !DeviceIPMask.fromString(ipMaskStr))
     return false;
+
+  AdminUser = user;
+  AdminPassword = pass;
+  DefaultPassword = defaultPass;
+
+  DeviceHostname = hostname;
+  DeviceTimezone = timezone;
+
+  uint8_t first_octet, second_octet, third_octet, fourth_octet;
+  sscanf(ipStr.c_str(), "%hhu.%hhu.%hhu.%hhu", &first_octet, &second_octet, &third_octet, &fourth_octet);
+  DeviceIP = IPAddress(first_octet, second_octet, third_octet, fourth_octet);
+  sscanf(ipMaskStr.c_str(), "%hhu.%hhu.%hhu.%hhu", &first_octet, &second_octet, &third_octet, &fourth_octet);
+  DeviceIPMask = IPAddress(first_octet, second_octet, third_octet, fourth_octet);
 
   LedPin = cLedPin;
   ResetPin = cResetPin;
@@ -61,11 +76,11 @@ bool CaptivePortalConfig::loadConfig() {
 bool CaptivePortalConfig::save() {
   DPRINTF(0, "[CaptivePortalConfig::save]");
   JsonDocument doc;
-  doc["user"]["name"] = AdminUser;
-  doc["user"]["pass"] = AdminPassword;
-  doc["user"]["defaultPass"] = DefaultPassword;
-  doc["device"]["hostname"] = DeviceHostname;
-  doc["device"]["timezone"] = DeviceTimezone;
+  doc["user"]["name"] = AdminUser.c_str();
+  doc["user"]["pass"] = AdminPassword.c_str();
+  doc["user"]["defaultPass"] = DefaultPassword.c_str();
+  doc["device"]["hostname"] = DeviceHostname.c_str();
+  doc["device"]["timezone"] = DeviceTimezone.c_str();
   doc["device"]["IP"] = DeviceIP.toString().c_str();
   doc["device"]["IPMask"] = DeviceIPMask.toString().c_str();
   doc["device"]["ledPin"] = LedPin;
