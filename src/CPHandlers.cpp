@@ -202,6 +202,9 @@ void CPHandlers::handleFactoryReset() {
  */
 void CPHandlers::handleCaptive() {
   DPRINTF(0, "[CPHandlers::handleCaptive]");
+
+  // DPRINTF(1, "URI: %s", webServer->uri().c_str());
+
   webServer->sendHeader("Location", String("http://") + WiFi.softAPIP().toString() + "/");
   webServer->send(302, contentType.textplain, "");
 }
