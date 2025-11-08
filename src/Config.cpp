@@ -72,12 +72,13 @@ bool CaptivePortalConfig::loadConfig() {
  *
  * The default values are configurable in Config.h
  *
+ * TODO: optimize to only update password
  */
-bool CaptivePortalConfig::save(bool defaultValues) {
+bool CaptivePortalConfig::save(bool useDefaultValues) {
   DPRINTF(0, "[CaptivePortalConfig::save]");
   JsonDocument doc;
   doc["user"]["name"] = AdminUser.c_str();
-  doc["user"]["pass"] = defaultValues ? DefaultPassword.c_str() : AdminPassword.c_str();  // save default password if requested
+  doc["user"]["pass"] = useDefaultValues ? DefaultPassword.c_str() : AdminPassword.c_str();  // save default password if requested
   doc["user"]["defaultPass"] = DefaultPassword.c_str();
   doc["device"]["hostname"] = DeviceHostname.c_str();
   doc["device"]["timezone"] = DeviceTimezone.c_str();
