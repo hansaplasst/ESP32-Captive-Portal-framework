@@ -85,16 +85,16 @@ class CaptivePortal {
    */
   virtual void setupHandlers();
 
+  /**
+   * @brief Loads configuration from LittleFS or creates defaults.
+   */
+  bool loadConfig();
+
  private:
   DNSServer* dnsServer = new DNSServer();
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour
-
-  /**
-   * @brief Loads configuration from LittleFS or creates defaults.
-   */
-  bool loadConfig();
   bool configLoaded = false;
 
   /**
