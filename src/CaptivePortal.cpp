@@ -98,7 +98,7 @@ void CaptivePortal::setupFS(bool format) {
     DPRINTF(3, "LittleFS mount failed");
     factoryReset(format);
   } else {
-#ifdef DEBUG_LEVEL
+#if DEBUG_LEVEL == 0
     // List existing files in debug mode
     File root = FSYS.open("/");
     File file = root.openNextFile();
