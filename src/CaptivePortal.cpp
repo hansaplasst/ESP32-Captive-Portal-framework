@@ -138,7 +138,7 @@ void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
 
   DPRINTF(0, "Starting AP SSID: %s", ssid);
   WiFi.softAP(ssid, password);
-  delay(100);
+  delay(500);
 }
 
 /**
