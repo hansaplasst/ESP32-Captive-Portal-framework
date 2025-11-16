@@ -71,7 +71,10 @@ void CaptivePortal::begin(const char* ssid) {
   static const char* headerKeys[] = {"Cookie", "Authorization"};
   webServer->collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
   webServer->begin();
-  DPRINTF(1, "Webserver SSID '%s' started on http://%s/",
+  DPRINTF(1,
+          "Captive Portal SSID started\n\t"
+          "Connect WiFi to: %s\n\t"
+          "and navigate to: http://%s/",
           Settings.DeviceHostname.c_str(), WiFi.softAPIP().toString().c_str());
 
   blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
