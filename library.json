@@ -1,0 +1,13 @@
+{
+  "name": "Responsive captive portal framework for ESP32",
+  "version": "1.0.0",
+  "author": "Hansaplast",
+  "license": "GPL-3.0",
+  "keywords": ["esp32", "captive portal", "web server"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hansaplasst/ESP32-Captive-Portal-framework.git"
+  },
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"]
+}
