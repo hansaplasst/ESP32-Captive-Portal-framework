@@ -268,6 +268,7 @@ void CPHandlers::handleListFiles() {
     }
   }
   json += "]";
+  noCache();
   webServer->send(200, "application/json", json);
 }
 
@@ -291,6 +292,7 @@ void CPHandlers::handleEditFileGet() {
   }
   String content = file.readString();
   file.close();
+  noCache();
   webServer->send(200, contentType.textplain, content);
 }
 
@@ -315,6 +317,7 @@ void CPHandlers::handleEditFilePost() {
   }
   file.print(content);
   file.close();
+  noCache();
   webServer->send(200, contentType.textplain, "File saved!");
 }
 
@@ -395,4 +398,13 @@ void CPHandlers::handleWiFiScan() {
 
   // We blijven in AP+STA; dat is robuuster voor herhaalde scans
   webServer->send(200, "application/json", json);
+}
+
+/**
+ * @brief sends no-caching headers to a client
+ */
+void CPHandlers::noCache() {
+  webServer->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  webServer->sendHeader("Pragma", "no-cache");
+  webServer->sendHeader("Expires", "0");
 }

@@ -48,6 +48,8 @@ class CPHandlers {
   void handleEditFilePost();
   void handleWiFiScan();
 
+  void noCache();  // Sends no-chache headers to a client
+
  private:
   WebServer* webServer;
   CaptivePortal* portal;
