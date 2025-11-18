@@ -89,7 +89,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
 
   File f = LittleFS.open(ConfigFile, "w");
   if (f) {
-    serializeJson(doc, f);
+    serializeJsonPretty(doc, f);
     f.close();
     DPRINTF(0, "Config file saved");
   } else {
