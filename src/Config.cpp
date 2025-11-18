@@ -91,7 +91,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   if (f) {
     serializeJsonPretty(doc, f);
     f.close();
-    DPRINTF(0, "Config file saved");
+    DPRINTF(1, "Config file saved");
   } else {
     DPRINTF(3, "Failed to save config file");
     return false;

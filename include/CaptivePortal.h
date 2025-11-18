@@ -41,7 +41,7 @@ class CaptivePortal {
    * This sets up LittleFS, WiFi AP, DNS, and registers all HTTP routes.
    *
    * @param ssid SSID of the access point (default: "ESP32-Login")
-   * @param password Password for the access point (default: "12345678")
+   * @param password Password for the access point (default: "password")
    */
   virtual void begin(const char* ssid);
 
