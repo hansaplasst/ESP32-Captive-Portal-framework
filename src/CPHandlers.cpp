@@ -144,6 +144,7 @@ void CPHandlers::handleEdit() {
 void CPHandlers::handleDevices() {
   DPRINTF(0, "[CPHandlers::handleDevices]");
   if (!requireAuth()) return;
+  noCache();
   webServer->send(200, contentType.texthtml, loadPageWithMenu("/devices.html", "devices", "Devices"));
 }
 
@@ -404,6 +405,7 @@ void CPHandlers::handleWiFiScan() {
  * @brief sends no-caching headers to a client
  */
 void CPHandlers::noCache() {
+  DPRINTF(0, "CPHandlers::noCache");
   webServer->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   webServer->sendHeader("Pragma", "no-cache");
   webServer->sendHeader("Expires", "0");
