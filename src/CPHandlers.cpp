@@ -195,7 +195,7 @@ void CPHandlers::handleFactoryReset() {
   DPRINTF(0, "[CPHandlers::handleFactoryReset]");
   if (!requireAuth()) return;
   handleLogout();
-  factoryReset(true);
+  factoryReset();
 }
 
 /**
