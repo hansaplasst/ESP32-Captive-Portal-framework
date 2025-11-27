@@ -10,6 +10,8 @@
 #include "Config.h"
 #include "PageRenderer.h"
 
+#define FSYS LittleFS
+
 /**
  * @brief Construct a new CPHandlers object
  *
@@ -195,7 +197,7 @@ void CPHandlers::handleFactoryReset() {
   DPRINTF(0, "[CPHandlers::handleFactoryReset]");
   if (!requireAuth()) return;
   handleLogout();
-  factoryReset();
+  factoryReset(false, FSYS, {portal->Settings.ConfigFile.c_str()});
 }
 
 /**
@@ -251,13 +253,13 @@ void CPHandlers::handleFirmwareUpdateDone() {
 }
 
 /**
- * @brief Lists files in LittleFS as a JSON array.
+ * @brief Lists files in FSYS as a JSON array.
  */
 void CPHandlers::handleListFiles() {
   DPRINTF(0, "[CPHandlers::handleListFiles]");
   if (!requireAuth()) return;
   String json = "[";
-  File root = LittleFS.open("/");
+  File root = FSYS.open("/");
   if (root && root.isDirectory()) {
     File file = root.openNextFile();
     bool first = true;
@@ -286,7 +288,7 @@ void CPHandlers::handleEditFileGet() {
   String name = webServer->arg("name");
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
-  File file = LittleFS.open(name, "r");
+  File file = FSYS.open(name, "r");
   if (!file) {
     webServer->send(404, contentType.textplain, "File not found");
     return;
@@ -311,7 +313,7 @@ void CPHandlers::handleEditFilePost() {
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
   String content = webServer->arg("content");
-  File file = LittleFS.open(name, "w");
+  File file = FSYS.open(name, "w");
   if (!file) {
     webServer->send(500, contentType.textplain, "Could not open file for writing");
     return;

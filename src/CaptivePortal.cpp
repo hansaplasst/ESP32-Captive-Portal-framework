@@ -86,20 +86,22 @@ void CaptivePortal::begin(const char* ssid) {
 void CaptivePortal::checkReset() {
   if (!FSYS.begin(false)) {
     DPRINTF(3, "[LittleFS] Initialization failed!");
-    factoryReset();
+    factoryReset(false, FSYS, {Settings.ConfigFile.c_str()});  // No format, just delete config.json
   }
 
-  checkResetButtonOnStartup(Settings.ResetPin, Settings.LedPin);  // ESPResetUtil feature
+  if (factoryResetRequest(Settings.ResetPin, Settings.LedPin)) {
+    factoryReset(false, FSYS, {Settings.ConfigFile.c_str()});  // No format, just delete config.json
+  }
 }
 
 /**
- * @brief Mounts the file system and prints file tree.
+ * @brief Mounts the file system and prints file tree in if DEBUG_LEVEL = 0
  */
 void CaptivePortal::setupFS(bool format) {
   DPRINTF(0, "[CaptivePortal::setupFS] Initializing LittleFS...");
   if (!FSYS.begin(false)) {
     DPRINTF(3, "LittleFS mount failed");
-    factoryReset(format);
+    factoryReset(format, FSYS, {Settings.ConfigFile.c_str()});
   } else {
 #if DEBUG_LEVEL == 0
     // List existing files in debug mode
@@ -117,7 +119,7 @@ void CaptivePortal::setupFS(bool format) {
  * @brief Loads configuration from LittleFS or creates defaults.
  */
 bool CaptivePortal::loadConfig() {
-  setupFS(true);  // format if mount fails
+  setupFS(false);  // if mount fails do not format else html files are gone.
 
   if (!Settings.loadConfig()) {
     DPRINTF(3, "Failed to load configuration.");
