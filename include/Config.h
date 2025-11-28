@@ -15,9 +15,9 @@ class CaptivePortalConfig {
    *
    * @param fileSystem
    */
-  CaptivePortalConfig(fs::LittleFSFS& fileSystem /* Use a mount point other than the default LittleFS */,
-                      bool formatOnFail = true, const char* basePath = "/devffs",
-                      uint8_t maxOpenFiles = (uint8_t)10U, const char* partitionLabel = "devffs");
+  CaptivePortalConfig(fs::LittleFSFS& file_system /* Use a mount point other than the default LittleFS */,
+                      bool format_on_fail = true, const char* base_path = "/devffs",
+                      uint8_t max_open_files = (uint8_t)10U, const char* partition_label = "devffs");
 
   ~CaptivePortalConfig();
 
@@ -46,12 +46,11 @@ class CaptivePortalConfig {
   bool imported();                           // Returns true if loadConfig() was successfull
   bool save(bool useDefaultValues = false);  ///< Saves the configuration to LittleFS
 
- protected:
-  fs::LittleFSFS& s_fileSystem;
-  bool s_formatOnFail;
-  const char* s_basePath;
-  uint8_t s_maxOpenFiles;
-  const char* s_partitionLabel;
+  fs::LittleFSFS& fileSystem;
+  bool formatOnFail;
+  const char* basePath;
+  uint8_t maxOpenFiles;
+  const char* partitionLabel;
 
  private:
   bool s_configLoaded = false;

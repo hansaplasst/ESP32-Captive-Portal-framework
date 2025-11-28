@@ -10,14 +10,14 @@
  *
  * @param fileSystem
  */
-CaptivePortalConfig::CaptivePortalConfig(fs::LittleFSFS& fileSystem /* Use a mount point other than the default LittleFS */,
-                                         bool formatOnFail, const char* basePath,
-                                         uint8_t maxOpenFiles, const char* partitionLabel)
-    : s_fileSystem(fileSystem),
-      s_formatOnFail(formatOnFail),
-      s_basePath(basePath),
-      s_maxOpenFiles(maxOpenFiles),
-      s_partitionLabel(partitionLabel) {}
+CaptivePortalConfig::CaptivePortalConfig(fs::LittleFSFS& file_system /* Use a mount point other than the default LittleFS */,
+                                         bool format_on_fail, const char* base_path,
+                                         uint8_t max_open_files, const char* partition_label)
+    : fileSystem(file_system),
+      formatOnFail(format_on_fail),
+      basePath(base_path),
+      maxOpenFiles(max_open_files),
+      partitionLabel(partition_label) {}
 
 CaptivePortalConfig::~CaptivePortalConfig() {
   s_configLoaded = false;
@@ -30,16 +30,16 @@ CaptivePortalConfig::~CaptivePortalConfig() {
  * @return true on success
  */
 bool CaptivePortalConfig::begin() {
-  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", s_basePath);
+  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", basePath);
 
   if (!fsMounted) {
-    if (!s_fileSystem.begin(false, s_basePath, s_maxOpenFiles, s_partitionLabel)) {
-      DPRINTF(3, "%s mount failed", s_basePath);
-      espResetUtil::factoryReset(s_formatOnFail, s_fileSystem, {ConfigFile.c_str()});
+    if (!fileSystem.begin(false, basePath, maxOpenFiles, partitionLabel)) {
+      DPRINTF(3, "%s mount failed", basePath);
+      espResetUtil::factoryReset(formatOnFail, fileSystem, {ConfigFile.c_str()});
     } else {
 #if DEBUG_LEVEL == 0
       // List existing files in debug mode
-      File root = s_fileSystem.open("/");
+      File root = fileSystem.open("/");
       File file = root.openNextFile();
       uint16_t cnt = 0;
       while (file) {
@@ -57,12 +57,12 @@ bool CaptivePortalConfig::begin() {
 }
 
 void CaptivePortalConfig::resetToFactoryDefault() {
-  DPRINTF(1, "Factory Reset: %s", s_basePath);
-  espResetUtil::factoryReset(s_formatOnFail, s_fileSystem, {ConfigFile.c_str()});  // Format or just delete config.json
+  DPRINTF(1, "Factory Reset: %s", basePath);
+  espResetUtil::factoryReset(formatOnFail, fileSystem, {ConfigFile.c_str()});  // Format or just delete config.json
 }
 
 bool CaptivePortalConfig::checkFactoryResetMarker() {
-  return espResetUtil::checkFactoryResetMarker(s_fileSystem);
+  return espResetUtil::checkFactoryResetMarker(fileSystem);
 }
 
 /**
@@ -72,7 +72,7 @@ bool CaptivePortalConfig::checkFactoryResetMarker() {
  * @return false otherwise
  */
 bool CaptivePortalConfig::configExists() {
-  return s_fileSystem.exists(ConfigFile);
+  return fileSystem.exists(ConfigFile);
 }
 
 /**
@@ -84,7 +84,7 @@ bool CaptivePortalConfig::loadConfig() {
   s_configLoaded = false;
   DPRINTF(0, "[CaptivePortalConfig::loadConfig] %s", ConfigFile);
 
-  File f = s_fileSystem.open(ConfigFile, "r");
+  File f = fileSystem.open(ConfigFile, "r");
   if (!f) return false;
 
   JsonDocument doc;
@@ -153,7 +153,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   doc["device"]["ledPin"] = LedPin;
   doc["device"]["resetPin"] = ResetPin;
 
-  File f = s_fileSystem.open(ConfigFile, "w");
+  File f = fileSystem.open(ConfigFile, "w");
   if (f) {
     serializeJsonPretty(doc, f);
     f.close();
