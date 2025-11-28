@@ -30,7 +30,7 @@ CaptivePortalConfig::~CaptivePortalConfig() {
  * @return true on success
  */
 bool CaptivePortalConfig::begin() {
-  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", basePath);
+  DPRINTF(0, "[CaptivePortalConfig::begin]\nInitializing File System: %s", basePath);
 
   if (!fsMounted) {
     if (!fileSystem.begin(false, basePath, maxOpenFiles, partitionLabel)) {
