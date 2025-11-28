@@ -14,13 +14,13 @@ CaptivePortalConfig::CaptivePortalConfig(fs::LittleFSFS& fileSystem /* Use a mou
                                          bool formatOnFail, const char* basePath,
                                          uint8_t maxOpenFiles, const char* partitionLabel)
     : fSys(fileSystem),
-      fmtOnFail(formatOnFail),
-      basePth(basePath),
-      maxOpenFls(maxOpenFiles),
-      partitionLbl(partitionLabel) {}
+      s_formatOnFail(formatOnFail),
+      s_basePath(basePath),
+      s_maxOpenFiles(maxOpenFiles),
+      s_partitionLabel(partitionLabel) {}
 
 CaptivePortalConfig::~CaptivePortalConfig() {
-  configLoaded = false;
+  s_configLoaded = false;
   fsMounted = false;
 }
 
@@ -30,12 +30,12 @@ CaptivePortalConfig::~CaptivePortalConfig() {
  * @return true on success
  */
 bool CaptivePortalConfig::begin() {
-  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", basePth);
+  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", s_basePath);
 
   if (!fsMounted) {
-    if (!fSys.begin(false, basePth, maxOpenFls, partitionLbl)) {
-      DPRINTF(3, "%s mount failed", basePth);
-      espResetUtil::factoryReset(fmtOnFail, fSys, {ConfigFile.c_str()});
+    if (!fSys.begin(false, s_basePath, s_maxOpenFiles, s_partitionLabel)) {
+      DPRINTF(3, "%s mount failed", s_basePath);
+      espResetUtil::factoryReset(s_formatOnFail, fSys, {ConfigFile.c_str()});
     } else {
 #if DEBUG_LEVEL == 0
       // List existing files in debug mode
@@ -57,8 +57,8 @@ bool CaptivePortalConfig::begin() {
 }
 
 void CaptivePortalConfig::resetToFactoryDefault() {
-  DPRINTF(1, "Factory Reset: %s", basePth);
-  espResetUtil::factoryReset(fmtOnFail, fSys, {ConfigFile.c_str()});  // Format or just delete config.json
+  DPRINTF(1, "Factory Reset: %s", s_basePath);
+  espResetUtil::factoryReset(s_formatOnFail, fSys, {ConfigFile.c_str()});  // Format or just delete config.json
 }
 
 bool CaptivePortalConfig::checkFactoryResetMarker() {
@@ -81,7 +81,7 @@ bool CaptivePortalConfig::configExists() {
  * If the file or any fields are missing, defaults are retained.
  */
 bool CaptivePortalConfig::loadConfig() {
-  configLoaded = false;
+  s_configLoaded = false;
   DPRINTF(0, "[CaptivePortalConfig::loadConfig] %s", ConfigFile);
 
   File f = fSys.open(ConfigFile, "r");
@@ -126,12 +126,12 @@ bool CaptivePortalConfig::loadConfig() {
   LedPin = cLedPin;
   ResetPin = cResetPin;
 
-  configLoaded = true;
-  return configLoaded;
+  s_configLoaded = true;
+  return s_configLoaded;
 }
 
 bool CaptivePortalConfig::imported() {
-  return configLoaded;
+  return s_configLoaded;
 }
 
 /**

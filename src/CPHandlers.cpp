@@ -16,10 +16,8 @@
  * @param webServer Pointer to the WebServer instance
  * @param portal Pointer to the CaptivePortal instance
  */
-CPHandlers::CPHandlers(WebServer* webServer, CaptivePortal* portal) {
+CPHandlers::CPHandlers(WebServer* webServer, CaptivePortal* portal) : s_webServer(webServer), s_portal(portal) {
   DPRINTF(0, "[CPHandlers::CPHandlers]");
-  this->webServer = webServer;
-  this->portal = portal;
 }
 
 /**
@@ -36,7 +34,7 @@ void CPHandlers::sendMobileMessage(int code, const String& title, const String& 
   html += "<h2>" + title + "</h2><p>" + message + "</p>";
   html += "<a href='" + target + "' style='display:inline-block; margin-top:20px; padding:10px 20px; background-color:#ef4444; color:white; text-decoration:none; border-radius:5px;'>" + buttonText + "</a>";
   html += "</div></body></html>";
-  webServer->send(code, contentType.texthtml, html);
+  s_webServer->send(code, contentType.texthtml, html);
 }
 
 /**
@@ -46,8 +44,8 @@ void CPHandlers::sendMobileMessage(int code, const String& title, const String& 
  */
 String CPHandlers::getSessionIdFromCookie() {
   DPRINTF(0, "[CPHandlers::getSessionIdFromCookie]");
-  if (!webServer->hasHeader("Cookie")) return "";
-  String cookie = webServer->header("Cookie");
+  if (!s_webServer->hasHeader("Cookie")) return "";
+  String cookie = s_webServer->header("Cookie");
   int pos = cookie.indexOf("sessionId=");
   if (pos == -1) return "";
   String sid = cookie.substring(pos + 10);
@@ -68,10 +66,10 @@ String CPHandlers::getSessionIdFromCookie() {
 bool CPHandlers::requireAuth() {
   DPRINTF(0, "[CPHandlers::requireAuth]");
   String sid = getSessionIdFromCookie();
-  if (!portal->isSessionValid(sid)) {
+  if (!s_portal->isSessionValid(sid)) {
     DPRINTF(1, "Session invalid or missing, redirecting to login");
-    webServer->sendHeader("Location", "/login");
-    webServer->send(302, "text/plain; charset=utf-8", "Redirecting to login");
+    s_webServer->sendHeader("Location", "/login");
+    s_webServer->send(302, "text/plain; charset=utf-8", "Redirecting to login");
     return false;
   }
   return true;
@@ -82,7 +80,7 @@ bool CPHandlers::requireAuth() {
  */
 void CPHandlers::handleRoot() {
   DPRINTF(0, "[CPHandlers::handleRoot]");
-  webServer->send(200, contentType.texthtml, loadFile("/login.html"));
+  s_webServer->send(200, contentType.texthtml, loadFile("/login.html"));
 }
 
 /**
@@ -90,20 +88,20 @@ void CPHandlers::handleRoot() {
  */
 void CPHandlers::handleLogin() {
   DPRINTF(0, "[CPHandlers::handleLogin]");
-  if (!webServer->hasArg("user") || !webServer->hasArg("pass")) {
-    webServer->send(400, contentType.textplain, "Missing fields");
+  if (!s_webServer->hasArg("user") || !s_webServer->hasArg("pass")) {
+    s_webServer->send(400, contentType.textplain, "Missing fields");
     return;
   }
 
-  if (webServer->arg("user") == portal->Settings.AdminUser && webServer->arg("pass") == portal->Settings.AdminPassword) {
-    String sid = portal->createSession();
+  if (s_webServer->arg("user") == s_portal->Settings.AdminUser && s_webServer->arg("pass") == s_portal->Settings.AdminPassword) {
+    String sid = s_portal->createSession();
     DPRINTF(0, "Login successful, creating sessionId: %s", sid.c_str());
-    webServer->sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/;");
-    if (webServer->arg("pass") == portal->Settings.DefaultPassword) {
-      webServer->send(200, contentType.texthtml, loadFile("/defaultpass_prompt.html"));
+    s_webServer->sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/;");
+    if (s_webServer->arg("pass") == s_portal->Settings.DefaultPassword) {
+      s_webServer->send(200, contentType.texthtml, loadFile("/defaultpass_prompt.html"));
     } else {
-      webServer->sendHeader("Location", "/home");
-      webServer->send(302, contentType.textplain, "Redirecting...");
+      s_webServer->sendHeader("Location", "/home");
+      s_webServer->send(302, contentType.textplain, "Redirecting...");
     }
   } else {
     sendMobileMessage(403, "Invalid Login", "Incorrect username or password.");
@@ -116,12 +114,12 @@ void CPHandlers::handleLogin() {
 void CPHandlers::handleUpdatePass() {
   DPRINTF(0, "[CPHandlers::handleUpdatePass]");
   if (!requireAuth()) return;
-  if (!webServer->hasArg("newpass")) {
-    webServer->send(400, contentType.textplain, "Missing new password");
+  if (!s_webServer->hasArg("newpass")) {
+    s_webServer->send(400, contentType.textplain, "Missing new password");
     return;
   }
-  portal->Settings.AdminPassword = webServer->arg("newpass");
-  portal->Settings.save();
+  s_portal->Settings.AdminPassword = s_webServer->arg("newpass");
+  s_portal->Settings.save();
 
   handleLogout();
 }
@@ -132,26 +130,26 @@ void CPHandlers::handleUpdatePass() {
 void CPHandlers::handleHome() {
   DPRINTF(0, "[CPHandlers::handleHome]");
   if (!requireAuth()) return;
-  webServer->send(200, contentType.texthtml, loadPageWithMenu("/home.html", "home", "Home"));
+  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/home.html", "home", "Home"));
 }
 
 void CPHandlers::handleEdit() {
   DPRINTF(0, "[CPHandlers::handleEdit]");
   if (!requireAuth()) return;
-  webServer->send(200, contentType.texthtml, loadPageWithMenu("/edit.html", "edit", "Edit"));
+  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/edit.html", "edit", "Edit"));
 }
 
 void CPHandlers::handleDevices() {
   DPRINTF(0, "[CPHandlers::handleDevices]");
   if (!requireAuth()) return;
   noCache();
-  webServer->send(200, contentType.texthtml, loadPageWithMenu("/devices.html", "devices", "Devices"));
+  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/devices.html", "devices", "Devices"));
 }
 
 void CPHandlers::handleSystem() {
   DPRINTF(0, "[CPHandlers::handleSystem]");
   if (!requireAuth()) return;
-  webServer->send(200, contentType.texthtml, loadPageWithMenu("/system.html", "system", "System"));
+  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/system.html", "system", "System"));
 }
 
 /**
@@ -164,19 +162,19 @@ void CPHandlers::handleLogout() {
   String sid = getSessionIdFromCookie();
   if (sid.length()) {
     DPRINTF(0, "Removing sessionId: %s", sid.c_str());
-    portal->removeSession(sid);
+    s_portal->removeSession(sid);
   }
 
   // Make Client-side cookie invalid
-  webServer->sendHeader("Set-Cookie", "sessionId=deleted; Path=/; Max-Age=0");
+  s_webServer->sendHeader("Set-Cookie", "sessionId=deleted; Path=/; Max-Age=0");
 
   // Disable Cache
-  webServer->sendHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-  webServer->sendHeader("Pragma", "no-cache");
+  s_webServer->sendHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  s_webServer->sendHeader("Pragma", "no-cache");
 
   // Redirect to login page
-  webServer->sendHeader("Location", "/login");
-  webServer->send(302, contentType.textplain, "Logged out");
+  s_webServer->sendHeader("Location", "/login");
+  s_webServer->send(302, contentType.textplain, "Logged out");
 }
 
 /**
@@ -185,7 +183,7 @@ void CPHandlers::handleLogout() {
 void CPHandlers::handleReboot() {
   DPRINTF(0, "[CPHandlers::handleReboot]");
   if (!requireAuth()) return;
-  espResetUtil::espReset(portal->Settings.LedPin);
+  espResetUtil::espReset(s_portal->Settings.LedPin);
 }
 
 /**
@@ -195,7 +193,7 @@ void CPHandlers::handleFactoryReset() {
   DPRINTF(0, "[CPHandlers::handleFactoryReset]");
   if (!requireAuth()) return;
   handleLogout();
-  portal->Settings.resetToFactoryDefault();
+  s_portal->Settings.resetToFactoryDefault();
 }
 
 /**
@@ -204,10 +202,10 @@ void CPHandlers::handleFactoryReset() {
 void CPHandlers::handleCaptive() {
   DPRINTF(0, "[CPHandlers::handleCaptive]");
 
-  // DPRINTF(1, "URI: %s", webServer->uri().c_str());
+  // DPRINTF(1, "URI: %s", _webServer->uri().c_str());
 
-  webServer->sendHeader("Location", String("http://") + WiFi.softAPIP().toString() + "/");
-  webServer->send(302, contentType.textplain, "");
+  s_webServer->sendHeader("Location", String("http://") + WiFi.softAPIP().toString() + "/");
+  s_webServer->send(302, contentType.textplain, "");
 }
 
 /**
@@ -216,7 +214,7 @@ void CPHandlers::handleCaptive() {
 void CPHandlers::handleFirmwareUpload() {
   DPRINTF(0, "[CPHandlers::handleFirmwareUpload]");
   if (!requireAuth()) return;
-  HTTPUpload& upload = webServer->upload();
+  HTTPUpload& upload = s_webServer->upload();
 
   if (upload.status == UPLOAD_FILE_START) {
     DPRINTF(1, "[OTA] Update start: %s", upload.filename.c_str());
@@ -242,9 +240,9 @@ void CPHandlers::handleFirmwareUpdateDone() {
   DPRINTF(0, "[CPHandlers::handleFirmwareUpdateDone]");
   if (!requireAuth()) return;
   if (Update.hasError()) {
-    webServer->send(500, contentType.textplain, "Update failed!");
+    s_webServer->send(500, contentType.textplain, "Update failed!");
   } else {
-    webServer->send(200, contentType.textplain, "Update successful. Rebooting...");
+    s_webServer->send(200, contentType.textplain, "Update successful. Rebooting...");
     delay(1000);
     ESP.restart();
   }
@@ -257,7 +255,7 @@ void CPHandlers::handleListFiles() {
   DPRINTF(0, "[CPHandlers::handleListFiles]");
   if (!requireAuth()) return;
   String json = "[";
-  File root = portal->getWebFileSystem().open("/");
+  File root = s_portal->getWebFileSystem().open("/");
   if (root && root.isDirectory()) {
     File file = root.openNextFile();
     bool first = true;
@@ -270,7 +268,7 @@ void CPHandlers::handleListFiles() {
   }
   json += "]";
   noCache();
-  webServer->send(200, "application/json", json);
+  s_webServer->send(200, "application/json", json);
 }
 
 /**
@@ -279,22 +277,22 @@ void CPHandlers::handleListFiles() {
 void CPHandlers::handleEditFileGet() {
   DPRINTF(0, "[CPHandlers::handleEditFileGet]");
   if (!requireAuth()) return;
-  if (!webServer->hasArg("name")) {
-    webServer->send(400, contentType.textplain, "Missing filename");
+  if (!s_webServer->hasArg("name")) {
+    s_webServer->send(400, contentType.textplain, "Missing filename");
     return;
   }
-  String name = webServer->arg("name");
+  String name = s_webServer->arg("name");
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
-  File file = portal->getWebFileSystem().open(name, "r");
+  File file = s_portal->getWebFileSystem().open(name, "r");
   if (!file) {
-    webServer->send(404, contentType.textplain, "File not found");
+    s_webServer->send(404, contentType.textplain, "File not found");
     return;
   }
   String content = file.readString();
   file.close();
   noCache();
-  webServer->send(200, contentType.textplain, content);
+  s_webServer->send(200, contentType.textplain, content);
 }
 
 /**
@@ -303,23 +301,23 @@ void CPHandlers::handleEditFileGet() {
 void CPHandlers::handleEditFilePost() {
   DPRINTF(0, "[CPHandlers::handleEditFilePost]");
   if (!requireAuth()) return;
-  if (!webServer->hasArg("name") || !webServer->hasArg("content")) {
-    webServer->send(400, contentType.textplain, "Missing params");
+  if (!s_webServer->hasArg("name") || !s_webServer->hasArg("content")) {
+    s_webServer->send(400, contentType.textplain, "Missing params");
     return;
   }
-  String name = webServer->arg("name");
+  String name = s_webServer->arg("name");
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
-  String content = webServer->arg("content");
-  File file = portal->getWebFileSystem().open(name, "w");
+  String content = s_webServer->arg("content");
+  File file = s_portal->getWebFileSystem().open(name, "w");
   if (!file) {
-    webServer->send(500, contentType.textplain, "Could not open file for writing");
+    s_webServer->send(500, contentType.textplain, "Could not open file for writing");
     return;
   }
   file.print(content);
   file.close();
   noCache();
-  webServer->send(200, contentType.textplain, "File saved!");
+  s_webServer->send(200, contentType.textplain, "File saved!");
 }
 
 /**
@@ -350,7 +348,7 @@ void CPHandlers::handleWiFiScan() {
   }
 
   // Start a new scan?
-  if (webServer->hasArg("start")) {
+  if (s_webServer->hasArg("start")) {
     // Clear any previous results to avoid stale reads
     WiFi.scanDelete();
 
@@ -358,11 +356,11 @@ void CPHandlers::handleWiFiScan() {
     bool ok = WiFi.scanNetworks(/*async=*/true, /*show_hidden=*/false, /*passive=*/false);
     if (!ok) {
       DPRINTF(2, "WiFi.scanNetworks async start FAILED");
-      webServer->send(200, "application/json", "{\"status\":\"failed\"}");
+      s_webServer->send(200, "application/json", "{\"status\":\"failed\"}");
       return;
     }
     DPRINTF(1, "WiFi.scanNetworks async start OK");
-    webServer->send(200, "application/json", "{\"status\":\"started\"}");
+    s_webServer->send(200, "application/json", "{\"status\":\"started\"}");
     return;
   }
 
@@ -370,12 +368,12 @@ void CPHandlers::handleWiFiScan() {
   int r = WiFi.scanComplete();  // >=0: count, -1: running, -2: failed
   if (r == WIFI_SCAN_RUNNING) {
     // Still scanning
-    webServer->send(200, "application/json", "{\"status\":\"running\"}");
+    s_webServer->send(200, "application/json", "{\"status\":\"running\"}");
     return;
   }
   if (r == WIFI_SCAN_FAILED) {
     // DPRINTF(2, "WiFi.scanComplete -> FAILED"); // Ignore false positives
-    webServer->send(200, "application/json", "{\"status\":\"failed\"}");
+    s_webServer->send(200, "application/json", "{\"status\":\"failed\"}");
     // Keep AP+STA; next start will reuse it
     return;
   }
@@ -398,7 +396,7 @@ void CPHandlers::handleWiFiScan() {
   WiFi.scanDelete();  // free results
 
   // We blijven in AP+STA; dat is robuuster voor herhaalde scans
-  webServer->send(200, "application/json", json);
+  s_webServer->send(200, "application/json", json);
 }
 
 /**
@@ -406,7 +404,7 @@ void CPHandlers::handleWiFiScan() {
  */
 void CPHandlers::noCache() {
   DPRINTF(0, "CPHandlers::noCache");
-  webServer->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-  webServer->sendHeader("Pragma", "no-cache");
-  webServer->sendHeader("Expires", "0");
+  s_webServer->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  s_webServer->sendHeader("Pragma", "no-cache");
+  s_webServer->sendHeader("Expires", "0");
 }

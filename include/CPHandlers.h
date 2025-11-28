@@ -51,8 +51,8 @@ class CPHandlers {
   void noCache();  // Sends no-chache headers to a client
 
  private:
-  WebServer* webServer;
-  CaptivePortal* portal;
+  WebServer* s_webServer;
+  CaptivePortal* s_portal;
   CPContentType contentType;
 };
 

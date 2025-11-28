@@ -48,11 +48,11 @@ class CaptivePortalConfig {
 
  private:
   fs::LittleFSFS& fSys;
-  bool fmtOnFail;
-  const char* basePth;
-  uint8_t maxOpenFls;
-  const char* partitionLbl;
-  bool configLoaded = false;
+  bool s_formatOnFail;
+  const char* s_basePath;
+  uint8_t s_maxOpenFiles;
+  const char* s_partitionLabel;
+  bool s_configLoaded = false;
   bool fsMounted = false;
 };
 
