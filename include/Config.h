@@ -46,12 +46,14 @@ class CaptivePortalConfig {
   bool imported();                           // Returns true if loadConfig() was successfull
   bool save(bool useDefaultValues = false);  ///< Saves the configuration to LittleFS
 
- private:
-  fs::LittleFSFS& fSys;
+ protected:
+  fs::LittleFSFS& s_fileSystem;
   bool s_formatOnFail;
   const char* s_basePath;
   uint8_t s_maxOpenFiles;
   const char* s_partitionLabel;
+
+ private:
   bool s_configLoaded = false;
   bool fsMounted = false;
 };

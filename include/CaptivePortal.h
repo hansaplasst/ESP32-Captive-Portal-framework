@@ -28,7 +28,7 @@ class CaptivePortal {
    * @param webFileSystem  Used for html files. webFileSystem is not formatted during a factory reset
    */
   CaptivePortal(CaptivePortalConfig& config,
-                fs::LittleFSFS& webFileSystem = LittleFS /* Leave as is if you run: pio run --target uploadfs */,
+                fs::LittleFSFS& fileSystem = LittleFS /* Leave as is if you run: pio run --target uploadfs */,
                 bool formatOnFail = false, const char* basePath = "/littlefs",
                 uint8_t maxOpenFiles = (uint8_t)10U, const char* partitionLabel = "spiffs");
   ~CaptivePortal();
