@@ -57,7 +57,7 @@ void CaptivePortal::begin(const char* ssid) {
     }
   }
 
-  DPRINTF(0, "  Initializing File System: %s", basePth);
+  DPRINTF(0, "Initializing File System: %s", basePth);
   if (!webFileSystem.begin(false, basePth, maxOpenFs, partLbl)) {
     DPRINTF(3, "[webFileSystem] Initialization failed! This should not happen!\n\tFile system corrupt or not available");
     espResetUtil::factoryReset(false, webFileSystem, {Settings.ConfigFile.c_str()});  // No format, just delete config.json (if available)
@@ -92,8 +92,8 @@ void CaptivePortal::begin(const char* ssid) {
   }
 
   setupWiFi(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str());  // Start AP
-  setupDNS();                                                                    // Start DNS redirector
-  setupHandlers();                                                               // Register all route handlers
+  setupDNS();                                                                  // Start DNS redirector
+  setupHandlers();                                                             // Register all route handlers
 
   // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
