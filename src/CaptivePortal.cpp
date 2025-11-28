@@ -240,3 +240,7 @@ void CaptivePortal::removeSession(const String& sid) {
 fs::LittleFSFS& CaptivePortal::getWebFileSystem() {
   return webFileSystem;
 }
+
+fs::LittleFSFS& CaptivePortal::getSettingsSystem() {
+  return Settings.fileSystem;
+}

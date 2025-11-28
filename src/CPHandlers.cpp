@@ -255,7 +255,7 @@ void CPHandlers::handleListFiles() {
   DPRINTF(0, "[CPHandlers::handleListFiles]");
   if (!requireAuth()) return;
   String json = "[";
-  File root = s_portal->getWebFileSystem().open("/");
+  File root = s_portal->getSettingsSystem().open("/");
   if (root && root.isDirectory()) {
     File file = root.openNextFile();
     bool first = true;
@@ -284,7 +284,7 @@ void CPHandlers::handleEditFileGet() {
   String name = s_webServer->arg("name");
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
-  File file = s_portal->getWebFileSystem().open(name, "r");
+  File file = s_portal->getSettingsSystem().open(name, "r");
   if (!file) {
     s_webServer->send(404, contentType.textplain, "File not found");
     return;
@@ -309,7 +309,7 @@ void CPHandlers::handleEditFilePost() {
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
   String content = s_webServer->arg("content");
-  File file = s_portal->getWebFileSystem().open(name, "w");
+  File file = s_portal->getSettingsSystem().open(name, "w");
   if (!file) {
     s_webServer->send(500, contentType.textplain, "Could not open file for writing");
     return;

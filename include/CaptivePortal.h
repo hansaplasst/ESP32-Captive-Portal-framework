@@ -83,9 +83,10 @@ class CaptivePortal {
   void removeSession(const String& sid);
 
   /**
-   * @brief returns webFileSystem
+   * @brief returns webFileSystem/settingsFileSystem
    */
   fs::LittleFSFS& getWebFileSystem();
+  fs::LittleFSFS& getSettingsSystem();
 
   /**
    * @brief true if the marker file exists (indicating a factory reset has occurred), false otherwise.
