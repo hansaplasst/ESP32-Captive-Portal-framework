@@ -10,10 +10,19 @@
   #include "soc/soc.h"
 #endif
 
-#define FSYS LittleFS
 #define DNS_PORT 53
 
-CaptivePortal::CaptivePortal() {
+/**
+ * @brief CaptivePortal set Device configuration and the web file system
+ *
+ * @param config Device configuration. The file system within config is formatted during factory reset
+ * @param webFS  Used for html files. webFS is not formatted during factory reset
+ */
+CaptivePortal::CaptivePortal(CaptivePortalConfig& config,
+                             fs::LittleFSFS& fileSystem, /* Use LittleFS if you run: pio run --target uploadfs */
+                             bool formatOnFail, const char* basePath,
+                             uint8_t maxOpenFiles, const char* partitionLabel)
+    : Settings(config), webFileSystem(fileSystem), fmtOnFail(formatOnFail), basePth(basePath), maxOpenFs(maxOpenFiles), partLbl(partitionLabel) {
   DPRINTF(0, "[CaptivePortal::CaptivePortal]");
 }
 
@@ -27,26 +36,42 @@ CaptivePortal::~CaptivePortal() {
 
 void CaptivePortal::begin() {
   DPRINTF(0, "[CaptivePortal::begin()]");
-  if (!loadConfig()) {
-    DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
-    delay(5000);
-    espReset();
+  if (!Settings.imported()) {
+    if (!loadConfig()) {
+      DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
+      delay(5000);
+      espResetUtil::espReset();
+    }
   }
-
-  configLoaded = true;
   begin(Settings.DeviceHostname.c_str());
 }
 
 void CaptivePortal::begin(const char* ssid) {
-  DPRINTF(0, "[CaptivePortal::begin(ssid)]");
-  DPRINTF(1, "%s booting...", ssid);
+  DPRINTF(0, "[CaptivePortal::begin(%s)]", ssid);
 
-  if (!configLoaded) {
+  if (!Settings.imported()) {
     if (!loadConfig()) {
       DPRINTF(3, "FATAL ERROR: Failed to load configuration during initialization.\n Device Broken???");
       delay(5000);
-      espReset();
+      espResetUtil::espReset();
     }
+  }
+
+  DPRINTF(0, "  Initializing File System: %s", basePth);
+  if (!webFileSystem.begin(false, basePth, maxOpenFs, partLbl)) {
+    DPRINTF(3, "[webFileSystem] Initialization failed! This should not happen!\n\tFile system corrupt or not available");
+    espResetUtil::factoryReset(false, webFileSystem, {Settings.ConfigFile.c_str()});  // No format, just delete config.json (if available)
+  } else {
+    delay(10);
+    File root = webFileSystem.open("/");
+    File file = root.openNextFile();
+    uint16_t cnt = 0;
+    while (file) {
+      DPRINTF(0, "\t%s (%d bytes)", file.name(), file.size());
+      file = root.openNextFile();
+      cnt++;
+    }
+    DPRINTF(0, "  %d file(s)..", cnt);
   }
 
   if (!Settings.DeviceHostname.equals(ssid)) {
@@ -61,11 +86,14 @@ void CaptivePortal::begin(const char* ssid) {
   pinMode(Settings.LedPin, OUTPUT);
   pinMode(Settings.ResetPin, INPUT_PULLUP);
 
-  checkReset();  // Check if reset button is held
+  // Check if reset button is held
+  if (espResetUtil::factoryResetRequest(Settings.ResetPin, Settings.LedPin)) {
+    Settings.resetToFactoryDefault();  // Reset to factory defaults
+  }
 
   setupWiFi(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str());  // Start AP
-  setupDNS();                                                                  // Start DNS redirector
-  setupHandlers();                                                             // Register all route handlers
+  setupDNS();                                                                    // Start DNS redirector
+  setupHandlers();                                                               // Register all route handlers
 
   // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
@@ -81,47 +109,10 @@ void CaptivePortal::begin(const char* ssid) {
 }
 
 /**
- * @brief Checks if reset button is held and initiates factory reset.
- */
-void CaptivePortal::checkReset() {
-  if (!FSYS.begin(false)) {
-    DPRINTF(3, "[LittleFS] Initialization failed!");
-    factoryReset(false, FSYS, {Settings.ConfigFile.c_str()});  // No format, just delete config.json
-  }
-
-  if (factoryResetRequest(Settings.ResetPin, Settings.LedPin)) {
-    factoryReset(false, FSYS, {Settings.ConfigFile.c_str()});  // No format, just delete config.json
-  }
-}
-
-/**
- * @brief Mounts the file system and prints file tree in if DEBUG_LEVEL = 0
- */
-void CaptivePortal::setupFS(bool format) {
-  DPRINTF(0, "[CaptivePortal::setupFS] Initializing LittleFS...");
-  if (!FSYS.begin(false)) {
-    DPRINTF(3, "LittleFS mount failed");
-    factoryReset(format, FSYS, {Settings.ConfigFile.c_str()});
-  } else {
-#if DEBUG_LEVEL == 0
-    // List existing files in debug mode
-    File root = FSYS.open("/");
-    File file = root.openNextFile();
-    while (file) {
-      DPRINTF(0, "  %s (%d bytes)", file.name(), file.size());
-      file = root.openNextFile();
-    }
-#endif
-  }
-}
-
-/**
  * @brief Loads configuration from LittleFS or creates defaults.
  */
 bool CaptivePortal::loadConfig() {
-  setupFS(false);  // if mount fails do not format else html files are gone.
-
-  if (!Settings.loadConfig()) {
+  if (!Settings.begin()) {
     DPRINTF(3, "Failed to load configuration.");
     return Settings.save(true);  // save default values
   }
@@ -154,12 +145,19 @@ void CaptivePortal::setupDNS() {
 }
 
 /**
+ * @brief true if the marker file exists (indicating a factory reset has occurred), false otherwise.
+ */
+bool CaptivePortal::checkFactoryResetMarker() {
+  return espResetUtil::checkFactoryResetMarker(webFileSystem);
+}
+
+/**
  * @brief Registers all HTTP route handlers.
  */
 void CaptivePortal::setupHandlers() {
   cpHandlers = new CPHandlers(webServer, this);
 
-  webServer->serveStatic("/styles.css", FSYS, "/styles.css");
+  webServer->serveStatic("/styles.css", webFileSystem, "/styles.css");
 
   webServer->on("/", HTTP_GET, [this]() { cpHandlers->handleRoot(); });
   webServer->on("/login", HTTP_POST, [this]() { cpHandlers->handleLogin(); });
@@ -193,7 +191,7 @@ void CaptivePortal::handle() {
 
   if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime");
-    espReset(Settings.LedPin);
+    espResetUtil::espReset(Settings.LedPin);
   }
 }
 
@@ -237,4 +235,8 @@ bool CaptivePortal::isSessionValid(const String& sid) {
  */
 void CaptivePortal::removeSession(const String& sid) {
   validSessions.erase(sid);
+}
+
+fs::LittleFSFS& CaptivePortal::getWebFileSystem() {
+  return webFileSystem;
 }

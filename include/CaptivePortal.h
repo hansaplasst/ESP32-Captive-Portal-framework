@@ -22,13 +22,19 @@
 class CaptivePortal {
  public:
   /**
-   * @brief Construct a new Captive Portal object
+   * @brief CaptivePortal set Device configuration and the web file system
+   *
+   * @param config         Device setttings
+   * @param webFileSystem  Used for html files. webFileSystem is not formatted during a factory reset
    */
-  CaptivePortal();
+  CaptivePortal(CaptivePortalConfig& config,
+                fs::LittleFSFS& webFileSystem = LittleFS /* Leave as is if you run: pio run --target uploadfs */,
+                bool formatOnFail = false, const char* basePath = "/littlefs",
+                uint8_t maxOpenFiles = (uint8_t)10U, const char* partitionLabel = "spiffs");
   ~CaptivePortal();
 
   /// Configuration settings for the captive portal
-  CaptivePortalConfig Settings;
+  CaptivePortalConfig& Settings;
 
   /**
    * @brief Initializes the captive portal system.
@@ -76,6 +82,16 @@ class CaptivePortal {
    */
   void removeSession(const String& sid);
 
+  /**
+   * @brief returns webFileSystem
+   */
+  fs::LittleFSFS& getWebFileSystem();
+
+  /**
+   * @brief true if the marker file exists (indicating a factory reset has occurred), false otherwise.
+   */
+  bool checkFactoryResetMarker();  // true if the marker file exists (indicating a factory reset has occurred), false otherwise.
+
  protected:
   WebServer* webServer = new WebServer(80);
   CPHandlers* cpHandlers = nullptr;
@@ -95,7 +111,12 @@ class CaptivePortal {
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp
   unsigned long sessionTimeout = 3600;            // 1 hour
-  bool configLoaded = false;
+
+  fs::LittleFSFS& webFileSystem;  // File system for html, css, etc. Does not format on Factory Reset
+  bool fmtOnFail;
+  const char* basePth;
+  uint8_t maxOpenFs;
+  const char* partLbl;
 
   /**
    * @brief Initializes the WiFi access point.
@@ -106,21 +127,9 @@ class CaptivePortal {
   void setupWiFi(const char* ssid, const char* password);
 
   /**
-   * @brief Mounts the file system and prints file tree.
-   *
-   * @param format If true, formats the file system if mounting fails
-   */
-  void setupFS(bool format = false);
-
-  /**
    * @brief Starts the DNS webServer for redirecting all queries to the AP.
    */
   void setupDNS();
-
-  /**
-   * @brief Checks the reset button and performs factory reset if held.
-   */
-  void checkReset();
 };
 
 #endif  // CAPTIVE_PORTAL_H

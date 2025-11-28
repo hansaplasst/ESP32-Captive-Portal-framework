@@ -1,8 +1,69 @@
 #include "Config.h"
 
 #include <ArduinoJson.h>
-#include <LittleFS.h>
+#include <ESPResetUtil.h>
 #include <dprintf.h>
+
+/**
+ * @brief Sets the file system for config file(s)
+ * Don't use the default LittleFS mount point else all html files will be gone after a factory reset.
+ *
+ * @param fileSystem
+ */
+CaptivePortalConfig::CaptivePortalConfig(fs::LittleFSFS& fileSystem /* Use a mount point other than the default LittleFS */,
+                                         bool formatOnFail, const char* basePath,
+                                         uint8_t maxOpenFiles, const char* partitionLabel)
+    : fSys(fileSystem),
+      fmtOnFail(formatOnFail),
+      basePth(basePath),
+      maxOpenFls(maxOpenFiles),
+      partitionLbl(partitionLabel) {}
+
+CaptivePortalConfig::~CaptivePortalConfig() {
+  configLoaded = false;
+  fsMounted = false;
+}
+
+/**
+ * @brief Mounts the file system (if not already) and loads config file. Also prints the file tree if DEBUG_LEVEL = 0
+ *
+ * @return true on success
+ */
+bool CaptivePortalConfig::begin() {
+  DPRINTF(0, "[CaptivePortalConfig::begin] Initializing File System: %s", basePth);
+
+  if (!fsMounted) {
+    if (!fSys.begin(false, basePth, maxOpenFls, partitionLbl)) {
+      DPRINTF(3, "%s mount failed", basePth);
+      espResetUtil::factoryReset(fmtOnFail, fSys, {ConfigFile.c_str()});
+    } else {
+#if DEBUG_LEVEL == 0
+      // List existing files in debug mode
+      File root = fSys.open("/");
+      File file = root.openNextFile();
+      uint16_t cnt = 0;
+      while (file) {
+        DPRINTF(0, "\t%s (%d bytes)", file.name(), file.size());
+        file = root.openNextFile();
+        cnt++;
+      }
+      DPRINTF(0, "  %d file(s)..", cnt);
+#endif
+    }
+    fsMounted = true;
+  }
+
+  return loadConfig();
+}
+
+void CaptivePortalConfig::resetToFactoryDefault() {
+  DPRINTF(1, "Factory Reset: %s", basePth);
+  espResetUtil::factoryReset(fmtOnFail, fSys, {ConfigFile.c_str()});  // Format or just delete config.json
+}
+
+bool CaptivePortalConfig::checkFactoryResetMarker() {
+  return espResetUtil::checkFactoryResetMarker(fSys);
+}
 
 /**
  * @brief Checks whether the configuration file exists on the file system.
@@ -11,7 +72,7 @@
  * @return false otherwise
  */
 bool CaptivePortalConfig::configExists() {
-  return LittleFS.exists(ConfigFile);
+  return fSys.exists(ConfigFile);
 }
 
 /**
@@ -20,9 +81,10 @@ bool CaptivePortalConfig::configExists() {
  * If the file or any fields are missing, defaults are retained.
  */
 bool CaptivePortalConfig::loadConfig() {
+  configLoaded = false;
   DPRINTF(0, "[CaptivePortalConfig::loadConfig] %s", ConfigFile);
 
-  File f = LittleFS.open(ConfigFile, "r");
+  File f = fSys.open(ConfigFile, "r");
   if (!f) return false;
 
   JsonDocument doc;
@@ -64,7 +126,12 @@ bool CaptivePortalConfig::loadConfig() {
   LedPin = cLedPin;
   ResetPin = cResetPin;
 
-  return true;
+  configLoaded = true;
+  return configLoaded;
+}
+
+bool CaptivePortalConfig::imported() {
+  return configLoaded;
 }
 
 /**
@@ -72,7 +139,6 @@ bool CaptivePortalConfig::loadConfig() {
  *
  * The default values are configurable in Config.h
  *
- * TODO: optimize to only update password
  */
 bool CaptivePortalConfig::save(bool useDefaultValues) {
   DPRINTF(0, "[CaptivePortalConfig::save]");
@@ -87,7 +153,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   doc["device"]["ledPin"] = LedPin;
   doc["device"]["resetPin"] = ResetPin;
 
-  File f = LittleFS.open(ConfigFile, "w");
+  File f = fSys.open(ConfigFile, "w");
   if (f) {
     serializeJsonPretty(doc, f);
     f.close();
