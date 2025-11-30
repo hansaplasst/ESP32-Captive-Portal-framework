@@ -80,7 +80,7 @@ bool CPHandlers::requireAuth() {
  */
 void CPHandlers::handleRoot() {
   DPRINTF(0, "[CPHandlers::handleRoot]");
-  s_webServer->send(200, contentType.texthtml, loadFile("/login.html"));
+  s_webServer->send(200, contentType.texthtml, loadFile(s_portal->getWebFileSystem(), "/login.html"));
 }
 
 /**
@@ -98,7 +98,7 @@ void CPHandlers::handleLogin() {
     DPRINTF(0, "Login successful, creating sessionId: %s", sid.c_str());
     s_webServer->sendHeader("Set-Cookie", "sessionId=" + sid + "; Path=/;");
     if (s_webServer->arg("pass") == s_portal->Settings.DefaultPassword) {
-      s_webServer->send(200, contentType.texthtml, loadFile("/defaultpass_prompt.html"));
+      s_webServer->send(200, contentType.texthtml, loadFile(s_portal->getWebFileSystem(), "/defaultpass_prompt.html"));
     } else {
       s_webServer->sendHeader("Location", "/home");
       s_webServer->send(302, contentType.textplain, "Redirecting...");
@@ -130,26 +130,26 @@ void CPHandlers::handleUpdatePass() {
 void CPHandlers::handleHome() {
   DPRINTF(0, "[CPHandlers::handleHome]");
   if (!requireAuth()) return;
-  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/home.html", "home", "Home"));
+  streamPageWithMenu(s_webServer, s_portal->getWebFileSystem(), "/home.html", "home", "Home");
 }
 
 void CPHandlers::handleEdit() {
   DPRINTF(0, "[CPHandlers::handleEdit]");
   if (!requireAuth()) return;
-  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/edit.html", "edit", "Edit"));
+  streamPageWithMenu(s_webServer, s_portal->getWebFileSystem(), "/edit.html", "edit", "Edit");
 }
 
 void CPHandlers::handleDevices() {
   DPRINTF(0, "[CPHandlers::handleDevices]");
   if (!requireAuth()) return;
   noCache();
-  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/devices.html", "devices", "Devices"));
+  streamPageWithMenu(s_webServer, s_portal->getWebFileSystem(), "/devices.html", "devices", "Devices");
 }
 
 void CPHandlers::handleSystem() {
   DPRINTF(0, "[CPHandlers::handleSystem]");
   if (!requireAuth()) return;
-  s_webServer->send(200, contentType.texthtml, loadPageWithMenu("/system.html", "system", "System"));
+  streamPageWithMenu(s_webServer, s_portal->getWebFileSystem(), "/system.html", "system", "System");
 }
 
 /**
@@ -255,7 +255,7 @@ void CPHandlers::handleListFiles() {
   DPRINTF(0, "[CPHandlers::handleListFiles]");
   if (!requireAuth()) return;
   String json = "[";
-  File root = s_portal->getSettingsSystem().open("/");
+  File root = s_portal->getSettingsFileSystem().open("/");
   if (root && root.isDirectory()) {
     File file = root.openNextFile();
     bool first = true;
@@ -284,7 +284,7 @@ void CPHandlers::handleEditFileGet() {
   String name = s_webServer->arg("name");
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
-  File file = s_portal->getSettingsSystem().open(name, "r");
+  File file = s_portal->getSettingsFileSystem().open(name, "r");
   if (!file) {
     s_webServer->send(404, contentType.textplain, "File not found");
     return;
@@ -309,7 +309,7 @@ void CPHandlers::handleEditFilePost() {
   if (!name.startsWith("/")) name = "/" + name;  // <-- fix
 
   String content = s_webServer->arg("content");
-  File file = s_portal->getSettingsSystem().open(name, "w");
+  File file = s_portal->getSettingsFileSystem().open(name, "w");
   if (!file) {
     s_webServer->send(500, contentType.textplain, "Could not open file for writing");
     return;

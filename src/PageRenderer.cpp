@@ -1,32 +1,53 @@
 #include "PageRenderer.h"
 
 #include <LittleFS.h>
+#include <WebServer.h>  // of ESP32WebServer
 
-#define FSYS LittleFS
-
-String loadFile(const String &path) {
-  File f = FSYS.open(path, "r");
+String loadFile(fs::LittleFSFS& fileSystem, const String& path) {
+  File f = fileSystem.open(path, "r");
   if (!f) return "<h2>404 Not Found</h2>";
   String content = f.readString();
   f.close();
   return content;
 }
 
-String loadPageWithMenu(const String &filePath, const String &activeTab, const String &pageTitle) {
-  String menu = loadFile("/tabmenu.html");
+void streamPageWithMenu(WebServer* server, fs::LittleFSFS& fileSystem,
+                        const String& filePath,
+                        const String& activeTab,
+                        const String& pageTitle) {
+  // 1. Begin chunked response
+  server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server->send(200, "text/html", "");
+
+  // 2. Menu en head in een paar kleine stukken
+  String menu = loadFile(fileSystem, "/tabmenu.html");
   menu.replace("{home}", activeTab == "home" ? "active" : "");
-  menu.replace("{edit}", activeTab == "edit" ? "active" : "");
   menu.replace("{devices}", activeTab == "devices" ? "active" : "");
   menu.replace("{system}", activeTab == "system" ? "active" : "");
 
-  String body = loadFile(filePath);
+  String head = "<!DOCTYPE html><html><head>";
+  head += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+  head += "<link rel=\"preload\" href=\"/styles.css\" as=\"style\" onload=\"this.rel='stylesheet'\" />";
+  head += "<noscript><link rel=\"stylesheet\" href=\"/styles.css\" /></noscript>";
+  head += "<title>" + pageTitle + "</title>";
+  head += "</head><body>";
 
-  String fullPage = "<!DOCTYPE html><html><head>";
-  fullPage += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
-  fullPage += "<link rel=\"preload\" href=\"/styles.css\" as=\"style\" onload=\"this.rel='stylesheet'\" />";
-  fullPage += "<noscript><link rel=\"stylesheet\" href=\"/styles.css\" /></noscript>";
-  fullPage += "<title>" + pageTitle + "</title>";
-  fullPage += "</head><body>" + menu + body + "</body></html>";
+  server->sendContent(head);
+  server->sendContent(menu);
 
-  return fullPage;
+  // 3. Body file in kleine chunks streamen
+  File f = fileSystem.open(filePath, "r");
+  if (!f) {
+    server->sendContent("<h2>404 Not Found</h2>");
+  } else {
+    static char buf[512];
+    while (int n = f.readBytes(buf, sizeof(buf))) {
+      server->sendContent(String(buf, n));
+    }
+    f.close();
+  }
+
+  // 4. Sluit HTML af
+  server->sendContent("</body></html>");
+  server->sendContent("");  // flush
 }

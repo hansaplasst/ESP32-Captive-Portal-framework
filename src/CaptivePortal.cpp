@@ -241,6 +241,6 @@ fs::LittleFSFS& CaptivePortal::getWebFileSystem() {
   return webFileSystem;
 }
 
-fs::LittleFSFS& CaptivePortal::getSettingsSystem() {
+fs::LittleFSFS& CaptivePortal::getSettingsFileSystem() {
   return Settings.fileSystem;
 }
