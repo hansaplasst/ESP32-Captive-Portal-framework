@@ -1,8 +1,8 @@
 {
   "user": {
     "name": "Admin",
-    "pass": "p",
-    "defaultPass": "pp"
+    "pass": "password",
+    "defaultPass": "password"
   },
   "device": {
     "hostname": "esp32-portal",

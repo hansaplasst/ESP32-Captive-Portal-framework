@@ -70,6 +70,10 @@
           errorDiv.textContent = "Both password fields are required.";
           return;
         }
+        if (pass1.length < 8) {
+          errorDiv.textContent = "Password must be at least 8 characters.";
+          return;
+        }
         if (pass1 !== pass2) {
           errorDiv.textContent = "Passwords do not match. Please try again.";
           return;
@@ -96,7 +100,11 @@
               window.location.href = "/login";
             }, 5000);
           } else {
-            errorDiv.textContent = "Failed to update password.";
+            if (res.status === 400) {
+              errorDiv.textContent = "Password must be at least 8 characters.";
+            } else {
+              errorDiv.textContent = "Failed to update password.";
+            }
           }
         } catch (err) {
           errorDiv.textContent = "Error updating password.";

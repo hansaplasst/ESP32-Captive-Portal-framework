@@ -83,6 +83,10 @@
       err.textContent = "Both password fields are required.";
       return false;
     }
+    if (pass1.length < 8) {
+      err.textContent = "Password must be at least 8 characters.";
+      return false;
+    }
     if (pass1 !== pass2) {
       err.textContent = "Passwords do not match. Please try again.";
       return false;

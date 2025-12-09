@@ -118,6 +118,12 @@ void CPHandlers::handleUpdatePass() {
     s_webServer->send(400, contentType.textplain, "Missing new password");
     return;
   }
+
+  if (s_webServer->arg("newpass").length() < 8) {
+    s_webServer->send(400, "text/plain", "Password must be at least 8 characters.");
+    return;
+  }
+
   s_portal->Settings.AdminPassword = s_webServer->arg("newpass");
   s_portal->Settings.save();
 
@@ -243,7 +249,7 @@ void CPHandlers::handleFirmwareUpdateDone() {
     s_webServer->send(500, contentType.textplain, "Update failed!");
   } else {
     s_webServer->send(200, contentType.textplain, "Update successful. Rebooting...");
-    delay(1000);
+    delay(3000);
     ESP.restart();
   }
 }
