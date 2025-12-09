@@ -30,7 +30,7 @@ CaptivePortalConfig::~CaptivePortalConfig() {
  * @return true on success
  */
 bool CaptivePortalConfig::begin() {
-  DPRINTF(0, "[CaptivePortalConfig::begin]\nInitializing File System: %s", basePath);
+  DPRINTF(0, "[CaptivePortalConfig::begin]\n    Initializing File System: %s", basePath);
 
   if (!fsMounted) {
     if (!fileSystem.begin(false, basePath, maxOpenFiles, partitionLabel)) {
@@ -99,6 +99,7 @@ bool CaptivePortalConfig::loadConfig() {
 
   // Load device settings from JSON, or use defaults
   String hostname = doc["device"]["hostname"] | DeviceHostname;
+  String devicename = doc["device"]["name"] | DeviceName;
   String timezone = doc["device"]["timezone"] | DeviceTimezone;
   String ipStr = doc["device"]["IP"] | DeviceIP.toString();
   String ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString();
@@ -114,6 +115,7 @@ bool CaptivePortalConfig::loadConfig() {
   AdminPassword = pass;
   DefaultPassword = defaultPass;
 
+  DeviceName = devicename;
   DeviceHostname = hostname;
   DeviceTimezone = timezone;
 
@@ -146,6 +148,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   doc["user"]["name"] = AdminUser.c_str();
   doc["user"]["pass"] = useDefaultValues ? DefaultPassword.c_str() : AdminPassword.c_str();  // save default password if requested
   doc["user"]["defaultPass"] = DefaultPassword.c_str();
+  doc["device"]["name"] = DeviceName.c_str();
   doc["device"]["hostname"] = DeviceHostname.c_str();
   doc["device"]["timezone"] = DeviceTimezone.c_str();
   doc["device"]["IP"] = DeviceIP.toString().c_str();
@@ -163,4 +166,13 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
     return false;
   }
   return true;
+}
+
+bool CaptivePortalConfig::setDeviceName(const String& name) {
+  DeviceName = name;
+  return save();
+}
+
+String CaptivePortalConfig::getEffectiveDeviceName() const {
+  return DeviceName.length() > 0 ? DeviceName : DeviceHostname;
 }

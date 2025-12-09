@@ -74,6 +74,7 @@ void CaptivePortal::begin(const char* ssid) {
     DPRINTF(0, "  %d file(s)..", cnt);
   }
 
+  // Only update hostname in config if SSID has changed
   if (!Settings.DeviceHostname.equals(ssid)) {
     DPRINTF(0, "SSID changed, updating hostname in config to '%s'", ssid);
     Settings.DeviceHostname = String(ssid);
@@ -91,9 +92,9 @@ void CaptivePortal::begin(const char* ssid) {
     Settings.resetToFactoryDefault();  // Reset to factory defaults
   }
 
-  setupWiFi(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str());  // Start AP
-  setupDNS();                                                                  // Start DNS redirector
-  setupHandlers();                                                             // Register all route handlers
+  setupWiFi(Settings.getEffectiveDeviceName().c_str(), Settings.AdminPassword.c_str());  // Start AP
+  setupDNS();                                                                            // Start DNS redirector
+  setupHandlers();                                                                       // Register all route handlers
 
   // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
@@ -103,7 +104,7 @@ void CaptivePortal::begin(const char* ssid) {
           "Captive Portal SSID started\n\t"
           "Connect WiFi to: %s\n\t"
           "and navigate to: http://%s/",
-          Settings.DeviceHostname.c_str(), WiFi.softAPIP().toString().c_str());
+          Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
 
   blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
 }

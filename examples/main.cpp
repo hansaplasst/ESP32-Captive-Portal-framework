@@ -11,7 +11,7 @@ CaptivePortal* portal = nullptr;
 
 void setup() {
   Serial.begin(115200);
-  delay(5000);
+  delay(3000);
 
   portal = new CaptivePortal(config);
   portal->begin();
