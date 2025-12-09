@@ -108,9 +108,9 @@
       const hostname = (cfg.hostname || "").trim();
 
       if (name.length > 0) {
-        devNameInput.value = name; // device.name heeft voorrang
+        devNameInput.value = name;
       } else {
-        devNameInput.value = hostname; // fallback naar hostname
+        devNameInput.value = hostname;
       }
     } catch (err) {
       console.error("Failed to load config:", err);
@@ -123,11 +123,6 @@
   async function saveDeviceName() {
     const name = document.getElementById("devicename").value.trim();
     const status = document.getElementById("devicename-status");
-
-    // if (name.length === 0) {
-    //   status.textContent = "Device name cannot be empty.";
-    //   return;
-    // }
 
     try {
       const res = await fetch("/updatedevicename", {
@@ -147,11 +142,8 @@
       );
 
       if (doReboot) {
-        // Reboot via bestaande handler
         try {
           await fetch("/reboot", { method: "POST" });
-          // Optioneel kun je hier nog een melding tonen:
-          // status.textContent = "Rebooting...";
         } catch (e) {
           console.error("Failed to send reboot request:", e);
           status.textContent = "Failed to send reboot request.";

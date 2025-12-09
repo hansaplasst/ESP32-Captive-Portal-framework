@@ -128,11 +128,6 @@ void CPHandlers::handleUpdateDeviceName() {
   String name = doc["name"] | "";
   name.trim();
 
-  // if (name.length() == 0) {
-  //   s_webServer->send(400, "application/json", "{\"error\":\"Device name required\"}");
-  //   return;
-  // }
-
   if (!s_portal->Settings.setDeviceName(name)) {
     s_webServer->send(500, "application/json", "{\"error\":\"Failed to save\"}");
     return;
