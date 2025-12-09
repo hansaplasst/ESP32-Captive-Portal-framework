@@ -207,3 +207,6 @@ th {
   opacity: 0.8;
   margin-left: 6px;
 }
+hr {
+  border: 1px solid lightslategray;
+}

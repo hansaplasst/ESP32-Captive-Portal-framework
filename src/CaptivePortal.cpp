@@ -175,6 +175,8 @@ void CaptivePortal::setupHandlers() {
   webServer->on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
   webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
   webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
+  webServer->on("/config", HTTP_GET, [this]() { cpHandlers->handleConfigGet(); });
+  webServer->on("/updatedevicename", HTTP_POST, [this]() { cpHandlers->handleUpdateDeviceName(); });
 
   // Redirect all other requests to captive portal
   webServer->on("/generate_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });

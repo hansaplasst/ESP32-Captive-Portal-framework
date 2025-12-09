@@ -109,6 +109,40 @@ void CPHandlers::handleLogin() {
 }
 
 /**
+ * @brief Updates the device name.
+ */
+void CPHandlers::handleUpdateDeviceName() {
+  DPRINTF(1, "[CPHandlers::handleUpdateDeviceName]");
+
+  if (!requireAuth()) return;
+
+  String body = s_webServer->arg("plain");
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, body);
+
+  if (err) {
+    s_webServer->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  String name = doc["name"] | "";
+  name.trim();
+
+  // if (name.length() == 0) {
+  //   s_webServer->send(400, "application/json", "{\"error\":\"Device name required\"}");
+  //   return;
+  // }
+
+  if (!s_portal->Settings.setDeviceName(name)) {
+    s_webServer->send(500, "application/json", "{\"error\":\"Failed to save\"}");
+    return;
+  }
+
+  noCache();
+  s_webServer->send(200, "application/json", "{\"status\":\"ok\"}");
+}
+
+/**
  * @brief Updates admin password and logs out.
  */
 void CPHandlers::handleUpdatePass() {
@@ -402,6 +436,24 @@ void CPHandlers::handleWiFiScan() {
   WiFi.scanDelete();  // free results
 
   // We blijven in AP+STA; dat is robuuster voor herhaalde scans
+  s_webServer->send(200, "application/json", json);
+}
+
+/**
+ * @brief Returns current configuration as JSON.
+ */
+void CPHandlers::handleConfigGet() {
+  DPRINTF(0, "[CPHandlers::handleConfigGet]");
+  if (!requireAuth()) return;
+
+  JsonDocument doc;
+  doc["name"] = s_portal->Settings.DeviceName;
+  doc["hostname"] = s_portal->Settings.DeviceHostname;
+
+  String json;
+  serializeJson(doc, json);
+
+  noCache();
   s_webServer->send(200, "application/json", json);
 }
 

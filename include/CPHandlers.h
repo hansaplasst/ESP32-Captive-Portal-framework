@@ -32,6 +32,7 @@ class CPHandlers {
   // Route handlers
   void handleRoot();
   void handleLogin();
+  void handleUpdateDeviceName();
   void handleUpdatePass();
   void handleHome();
   void handleEdit();
@@ -47,6 +48,7 @@ class CPHandlers {
   void handleEditFileGet();
   void handleEditFilePost();
   void handleWiFiScan();
+  void handleConfigGet();
 
   void noCache();  // Sends no-chache headers to a client
 

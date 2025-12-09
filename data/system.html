@@ -1,6 +1,28 @@
 <div class="container">
   <h2>System Settings</h2>
 
+  <!-- Device Name -->
+  <section id="device-name-section">
+    <div class="input-group">
+      <label for="devicename">Device Name</label>
+      <input
+        type="text"
+        id="devicename"
+        name="devicename"
+        placeholder="Enter a custom device name"
+        value=""
+      />
+    </div>
+
+    <div
+      id="devicename-status"
+      class="status-message"
+      style="color: red; font-weight: bold; margin-top: 10px"
+    ></div>
+    <button id="devicename-save">Update Device Name</button>
+  </section>
+  <hr />
+
   <!-- Change Admin Password -->
   <form
     id="updatePassForm"
@@ -9,12 +31,7 @@
     accept-charset="UTF-8"
     onsubmit="return validatePasswords() && confirm('Are you sure you want to change the admin password?');"
   >
-    <div
-      id="passError"
-      style="color: red; font-weight: bold; margin-top: 10px"
-    ></div>
     <label for="newpass">Change Admin Password</label>
-
     <input
       type="password"
       id="newpass"
@@ -29,8 +46,13 @@
       required
     />
 
+    <div
+      id="passError"
+      style="color: red; font-weight: bold; margin-top: 10px"
+    ></div>
     <input type="submit" value="Update Password" />
   </form>
+  <hr />
 
   <!-- Reboot -->
   <form action="/reboot" method="POST">
@@ -74,6 +96,73 @@
 </div>
 
 <script>
+  async function loadDeviceName() {
+    try {
+      const res = await fetch("/config", { cache: "no-store" });
+      if (!res.ok) return;
+
+      const cfg = await res.json();
+      const devNameInput = document.getElementById("devicename");
+
+      const name = (cfg.name || "").trim();
+      const hostname = (cfg.hostname || "").trim();
+
+      if (name.length > 0) {
+        devNameInput.value = name; // device.name heeft voorrang
+      } else {
+        devNameInput.value = hostname; // fallback naar hostname
+      }
+    } catch (err) {
+      console.error("Failed to load config:", err);
+    }
+  }
+  window.addEventListener("load", () => {
+    loadDeviceName();
+  });
+
+  async function saveDeviceName() {
+    const name = document.getElementById("devicename").value.trim();
+    const status = document.getElementById("devicename-status");
+
+    // if (name.length === 0) {
+    //   status.textContent = "Device name cannot be empty.";
+    //   return;
+    // }
+
+    try {
+      const res = await fetch("/updatedevicename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!res.ok) {
+        status.textContent = "Failed to save device name.";
+        return;
+      }
+
+      status.textContent = "Device name updated successfully.";
+      const doReboot = confirm(
+        "This device can be found under the new name after a reboot.\n\nDo you wish to reboot?"
+      );
+
+      if (doReboot) {
+        // Reboot via bestaande handler
+        try {
+          await fetch("/reboot", { method: "POST" });
+          // Optioneel kun je hier nog een melding tonen:
+          // status.textContent = "Rebooting...";
+        } catch (e) {
+          console.error("Failed to send reboot request:", e);
+          status.textContent = "Failed to send reboot request.";
+        }
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      status.textContent = "Error saving device name.";
+    }
+  }
+
   function validatePasswords() {
     const pass1 = document.getElementById("newpass").value.trim();
     const pass2 = document.getElementById("confirmpass").value.trim();
@@ -94,4 +183,8 @@
     err.textContent = "";
     return true;
   }
+
+  document
+    .getElementById("devicename-save")
+    .addEventListener("click", saveDeviceName);
 </script>
