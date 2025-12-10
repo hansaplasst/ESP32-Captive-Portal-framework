@@ -5,6 +5,7 @@
 #include <LittleFS.h>
 #include <Update.h>
 #include <WiFi.h>
+#include <dprintf.h>
 
 #include "CaptivePortal.h"
 #include "Config.h"
@@ -68,7 +69,7 @@ bool CPHandlers::requireAuth() {
   String sid = getSessionIdFromCookie();
   if (!s_portal->isSessionValid(sid)) {
     DPRINTF(1, "Session invalid or missing, redirecting to login");
-    s_webServer->sendHeader("Location", "/login");
+    s_webServer->sendHeader("Location", "/");
     s_webServer->send(302, "text/plain; charset=utf-8", "Redirecting to login");
     return false;
   }
@@ -184,6 +185,7 @@ void CPHandlers::handleDevices() {
 void CPHandlers::handleSystem() {
   DPRINTF(0, "[CPHandlers::handleSystem]");
   if (!requireAuth()) return;
+  noCache();
   streamPageWithMenu(s_webServer, s_portal->getWebFileSystem(), "/system.html", "system", "System");
 }
 
@@ -363,14 +365,6 @@ void CPHandlers::handleEditFilePost() {
  *                           if failed:  {"status":"failed"}
  *                           if ready:   [ {ssid, rssi, channel, secure}, ... ]
  */
-/**
- * @brief Asynchronous WiFi scan endpoint.
- *
- * GET /wifiscan?start=1  -> starts scan, returns {"status":"started"}
- * GET /wifiscan          -> if running: {"status":"running"}
- *                           if failed:  {"status":"failed"}
- *                           if ready:   [ {ssid, rssi, channel, secure}, ... ]
- */
 void CPHandlers::handleWiFiScan() {
   DPRINTF(0, "[CPHandlers::handleWiFiScan]");
   if (!requireAuth()) return;
@@ -420,7 +414,7 @@ void CPHandlers::handleWiFiScan() {
     if (i) json += ",";
     bool secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
     json += "{";
-    json += "\"ssid\":\"" + String(WiFi.SSID(i)) + "\",";
+    json += "\"ssid\":\"" + jsonEscape(String(WiFi.SSID(i))) + "\",";
     json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
     json += "\"channel\":" + String(WiFi.channel(i)) + ",";
     json += "\"secure\":" + String(secure ? "true" : "false");
@@ -460,4 +454,44 @@ void CPHandlers::noCache() {
   s_webServer->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   s_webServer->sendHeader("Pragma", "no-cache");
   s_webServer->sendHeader("Expires", "0");
+}
+
+String jsonEscape(const String& in) {
+  String out;
+  for (size_t i = 0; i < in.length(); ++i) {
+    char c = in[i];
+    switch (c) {
+      case '\"':
+        out += "\\\"";
+        break;
+      case '\\':
+        out += "\\\\";
+        break;
+      case '\b':
+        out += "\\b";
+        break;
+      case '\f':
+        out += "\\f";
+        break;
+      case '\n':
+        out += "\\n";
+        break;
+      case '\r':
+        out += "\\r";
+        break;
+      case '\t':
+        out += "\\t";
+        break;
+      default:
+        if ((uint8_t)c < 0x20) {
+          // Control character as \u00XX
+          char buf[7];
+          snprintf(buf, sizeof(buf), "\\u%04X", (uint8_t)c);
+          out += buf;
+        } else {
+          out += c;
+        }
+    }
+  }
+  return out;
 }

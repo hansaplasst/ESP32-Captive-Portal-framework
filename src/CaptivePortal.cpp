@@ -32,6 +32,14 @@ CaptivePortal::~CaptivePortal() {
     delete cpHandlers;
     cpHandlers = nullptr;
   }
+  if (webServer) {
+    delete webServer;
+    webServer = nullptr;
+  }
+  if (dnsServer) {
+    delete dnsServer;
+    dnsServer = nullptr;
+  }
 }
 
 void CaptivePortal::begin() {
@@ -60,7 +68,7 @@ void CaptivePortal::begin(const char* ssid) {
   DPRINTF(0, "Initializing File System: %s", basePth);
   if (!webFileSystem.begin(false, basePth, maxOpenFs, partLbl)) {
     DPRINTF(3, "[webFileSystem] Initialization failed! This should not happen!\n\tFile system corrupt or not available");
-    espResetUtil::factoryReset(false, webFileSystem, {Settings.ConfigFile.c_str()});  // No format, just delete config.json (if available)
+    espResetUtil::factoryReset(false, webFileSystem);
   } else {
     delay(10);
     File root = webFileSystem.open("/");

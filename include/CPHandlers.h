@@ -56,6 +56,7 @@ class CPHandlers {
   WebServer* s_webServer;
   CaptivePortal* s_portal;
   CPContentType contentType;
+  String jsonEscape(const String& in);
 };
 
 #endif  // CP_HANDLERS_H
