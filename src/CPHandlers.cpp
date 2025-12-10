@@ -456,7 +456,7 @@ void CPHandlers::noCache() {
   s_webServer->sendHeader("Expires", "0");
 }
 
-String jsonEscape(const String& in) {
+String CPHandlers::jsonEscape(const String& in) {
   String out;
   for (size_t i = 0; i < in.length(); ++i) {
     char c = in[i];
