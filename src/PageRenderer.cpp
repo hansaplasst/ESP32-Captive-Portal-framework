@@ -24,6 +24,7 @@ void streamPageWithMenu(WebServer* server, fs::LittleFSFS& fileSystem,
   menu.replace("{home}", activeTab == "home" ? "active" : "");
   menu.replace("{devices}", activeTab == "devices" ? "active" : "");
   menu.replace("{system}", activeTab == "system" ? "active" : "");
+  menu.replace("{edit}", activeTab == "edit" ? "active" : "");
 
   String head = "<!DOCTYPE html><html><head>";
   head += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
