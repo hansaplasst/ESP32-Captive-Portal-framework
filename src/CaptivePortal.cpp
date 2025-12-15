@@ -96,7 +96,7 @@ void CaptivePortal::begin(const char* ssid) {
   pinMode(Settings.ResetPin, INPUT_PULLUP);
 
   // Check if reset button is held
-  if (espResetUtil::factoryResetRequest(Settings.ResetPin, Settings.LedPin)) {
+  if (espResetUtil::factoryResetRequest(Settings.ResetPin, Settings.LedPin, Settings.UseRgbLed, Settings.RgbBrightness)) {
     Settings.resetToFactoryDefault();  // Reset to factory defaults
   }
 
@@ -114,7 +114,7 @@ void CaptivePortal::begin(const char* ssid) {
           "and navigate to: http://%s/",
           Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
 
-  blinkLedOnPin(Settings.LedPin, 3, 1000);  // Indicate setup completion
+  blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.UseRgbLed, Settings.RgbBrightness);  // Indicate setup completion
 }
 
 /**
@@ -202,7 +202,7 @@ void CaptivePortal::handle() {
 
   if (digitalRead(Settings.ResetPin) == LOW) {
     DPRINTF(2, "[Loop] Reset button pressed during runtime");
-    espResetUtil::espReset(Settings.LedPin);
+    espResetUtil::espReset(Settings.LedPin, Settings.UseRgbLed, Settings.RgbBrightness);
   }
 }
 

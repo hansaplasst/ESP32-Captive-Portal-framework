@@ -104,9 +104,9 @@ bool CaptivePortalConfig::loadConfig() {
   String ipStr = doc["device"]["IP"] | DeviceIP.toString();
   String ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString();
   uint8_t cLedPin = doc["device"]["ledPin"] | LedPin;
+  bool cRgbLed = doc["device"]["useRgbLed"] | UseRgbLed;
+  uint8_t cRgbBrightness = doc["device"]["rgbBrightness"] | RgbBrightness;
   uint8_t cResetPin = doc["device"]["resetPin"] | ResetPin;
-  LedPin = cLedPin;
-  ResetPin = cResetPin;
 
   if (!DeviceIP.fromString(ipStr) || !DeviceIPMask.fromString(ipMaskStr))
     return false;
@@ -126,6 +126,8 @@ bool CaptivePortalConfig::loadConfig() {
   DeviceIPMask = IPAddress(first_octet, second_octet, third_octet, fourth_octet);
 
   LedPin = cLedPin;
+  UseRgbLed = cRgbLed;
+  RgbBrightness = cRgbBrightness;
   ResetPin = cResetPin;
 
   s_configLoaded = true;
@@ -154,6 +156,8 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   doc["device"]["IP"] = DeviceIP.toString().c_str();
   doc["device"]["IPMask"] = DeviceIPMask.toString().c_str();
   doc["device"]["ledPin"] = LedPin;
+  doc["device"]["useRgbLed"] = UseRgbLed;
+  doc["device"]["rgbBrightness"] = RgbBrightness;
   doc["device"]["resetPin"] = ResetPin;
 
   File f = fileSystem.open(ConfigFile, "w");

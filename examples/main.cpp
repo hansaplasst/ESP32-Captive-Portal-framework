@@ -14,10 +14,13 @@ void setup() {
   delay(3000);
 
   portal = new CaptivePortal(config);
+  // portal->Settings.LedPin = 38;
+  // portal->Settings.UseRgbLed = true;
+  // portal->Settings.RgbBrightness = 128;
+  // portal->Settings.save();
   portal->begin();
 
   config.checkFactoryResetMarker();  // Remover the marker file after factory reset
-  // portal->checkFactoryResetMarker(); // Never found since portal->webFileSystem is never reset
 }
 
 void loop() {

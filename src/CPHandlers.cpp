@@ -220,7 +220,7 @@ void CPHandlers::handleLogout() {
 void CPHandlers::handleReboot() {
   DPRINTF(0, "[CPHandlers::handleReboot]");
   if (!requireAuth()) return;
-  espResetUtil::espReset(s_portal->Settings.LedPin);
+  espResetUtil::espReset(s_portal->Settings.LedPin, s_portal->Settings.UseRgbLed, s_portal->Settings.RgbBrightness);
 }
 
 /**
