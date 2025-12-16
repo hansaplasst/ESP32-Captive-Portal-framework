@@ -25,7 +25,7 @@ CaptivePortalConfig::~CaptivePortalConfig() {
 }
 
 /**
- * @brief Mounts the file system (if not already) and loads config file. Also prints the file tree if DEBUG_LEVEL = 0
+ * @brief Mounts the file system (if not already) and loads config file into memory.
  *
  * @return true on success
  */
@@ -104,7 +104,7 @@ bool CaptivePortalConfig::loadConfig() {
   String ipStr = doc["device"]["IP"] | DeviceIP.toString();
   String ipMaskStr = doc["device"]["IPMask"] | DeviceIPMask.toString();
   uint8_t cLedPin = doc["device"]["ledPin"] | LedPin;
-  bool cRgbLed = doc["device"]["useRgbLed"] | UseRgbLed;
+  bool cRgbLed = doc["device"]["hasRgbLed"] | HasRgbLed;
   uint8_t cRgbBrightness = doc["device"]["rgbBrightness"] | RgbBrightness;
   uint8_t cResetPin = doc["device"]["resetPin"] | ResetPin;
 
@@ -126,7 +126,7 @@ bool CaptivePortalConfig::loadConfig() {
   DeviceIPMask = IPAddress(first_octet, second_octet, third_octet, fourth_octet);
 
   LedPin = cLedPin;
-  UseRgbLed = cRgbLed;
+  HasRgbLed = cRgbLed;
   RgbBrightness = cRgbBrightness;
   ResetPin = cResetPin;
 
@@ -156,7 +156,7 @@ bool CaptivePortalConfig::save(bool useDefaultValues) {
   doc["device"]["IP"] = DeviceIP.toString().c_str();
   doc["device"]["IPMask"] = DeviceIPMask.toString().c_str();
   doc["device"]["ledPin"] = LedPin;
-  doc["device"]["useRgbLed"] = UseRgbLed;
+  doc["device"]["hasRgbLed"] = HasRgbLed;
   doc["device"]["rgbBrightness"] = RgbBrightness;
   doc["device"]["resetPin"] = ResetPin;
 

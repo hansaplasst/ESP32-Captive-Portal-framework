@@ -40,7 +40,7 @@ class CaptivePortalConfig {
   IPAddress DeviceIP = IPAddress(192, 168, 168, 168);    ///< Default device IP address
   IPAddress DeviceIPMask = IPAddress(255, 255, 255, 0);  ///< Default device IP mask
   uint8_t LedPin = 2;                                    ///< Pin number for the LED indicator
-  bool UseRgbLed = false;                                ///< True if the LED is an RGB LED
+  bool HasRgbLed = false;                                ///< True if the LED is an RGB LED
   uint8_t RgbBrightness = 128;                           ///< Brightness of the RGB LED (0-255)
   uint8_t ResetPin = 4;                                  ///< Pin number for the reset button
 
