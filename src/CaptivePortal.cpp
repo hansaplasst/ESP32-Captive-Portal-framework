@@ -67,8 +67,13 @@ void CaptivePortal::begin(const char* ssid) {
 
   DPRINTF(0, "Initializing File System: %s", basePth);
   if (!webFileSystem.begin(false, basePth, maxOpenFs, partLbl)) {
-    DPRINTF(3, "[webFileSystem] Initialization failed! This should not happen!\n\tFile system corrupt or not available");
-    espResetUtil::factoryReset(false, webFileSystem);
+    DPRINTF(3,
+            "[webFileSystem] Initialization failed! This should not happen!\n\t"
+            "File system corrupt or not available...\n\n\t"
+            "Formatting file system in 5 seconds...\n\t"
+            "Please FLASH the web files to this File System on success.");
+    delay(5000);
+    espResetUtil::factoryReset(true, webFileSystem);
   } else {
     delay(10);
     File root = webFileSystem.open("/");
