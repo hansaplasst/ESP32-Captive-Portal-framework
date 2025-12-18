@@ -431,22 +431,14 @@ void CPHandlers::handleWiFiScan() {
   s_webServer->send(200, "application/json", json);
 }
 
-/**
- * @brief Returns current configuration as JSON.
- */
-void CPHandlers::handleConfigGet() {
-  DPRINTF(0, "[CPHandlers::handleConfigGet]");
+void CPHandlers::handleDeviceNameGet() {
   if (!requireAuth()) return;
 
   JsonDocument doc;
-  doc["name"] = s_portal->Settings.DeviceName;
-  doc["hostname"] = s_portal->Settings.DeviceHostname;
-
-  String json;
-  serializeJson(doc, json);
-
-  noCache();
-  s_webServer->send(200, "application/json", json);
+  doc["name"] = s_portal->Settings.DeviceName != "" ? s_portal->Settings.DeviceName : s_portal->Settings.DeviceHostname;
+  String out;
+  serializeJson(doc, out);
+  s_webServer->send(200, "application/json", out);
 }
 
 /**

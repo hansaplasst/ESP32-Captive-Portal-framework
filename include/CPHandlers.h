@@ -48,7 +48,7 @@ class CPHandlers {
   void handleEditFileGet();
   void handleEditFilePost();
   void handleWiFiScan();
-  void handleConfigGet();
+  void handleDeviceNameGet();
 
   void noCache();  // Sends no-chache headers to a client
 
