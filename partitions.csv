@@ -1,5 +1,11 @@
-# devffs = 32kB and used for reading and writing files
-# spiffs = 96kB and the default uploadfs target
+# nvs      = 20kB   used for storing WiFi and other settings. See: <Preferences.h>
+# otadata  = 8kB    used for OTA updates
+# app0     = 1.9MB  the default app partition
+# app1     = 1.9MB  the OTA app partition
+# devffs   = 32kB   used for reading and writing files
+# spiffs   = 96kB   the default uploadfs target
+# coredump = 65kB   used for storing core dumps
+#
 # Name,   Type, SubType, Offset,  Size, Flags
 nvs,      data, nvs,     0x9000,  0x5000,
 otadata,  data, ota,     0xe000,  0x2000,

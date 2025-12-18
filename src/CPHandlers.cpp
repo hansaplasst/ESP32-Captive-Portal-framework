@@ -353,6 +353,9 @@ void CPHandlers::handleEditFilePost() {
   }
   file.print(content);
   file.close();
+  if (name == s_portal->Settings.ConfigFile)
+    s_portal->Settings.loadConfig();  // Reload config after edit
+
   noCache();
   s_webServer->send(200, contentType.textplain, "File saved!");
 }
