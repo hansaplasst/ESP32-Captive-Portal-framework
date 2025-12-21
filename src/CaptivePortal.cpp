@@ -144,7 +144,7 @@ bool CaptivePortal::start() {
   if (!webServer || !dnsServer) return false;
 
   // Restart SoftAP
-  if (!WiFi.softAP(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str())) {
+  if (!WiFi.softAP(Settings.getEffectiveDeviceName().c_str(), Settings.AdminPassword.c_str())) {
     DPRINTF(3, "WiFi.softAP failed");
     return false;
   }
