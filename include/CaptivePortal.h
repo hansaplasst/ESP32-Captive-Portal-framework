@@ -51,6 +51,9 @@ class CaptivePortal {
    */
   virtual void begin(const char* ssid);
 
+  bool start();            ///< Starts the captive portal
+  bool stop();             ///< Stops the captive portal
+  bool isRunning() const;  ///< true if the portal is running
   /**
    * @brief Main loop handler.
    *
@@ -108,6 +111,8 @@ class CaptivePortal {
   bool loadConfig();
 
  private:
+  bool running = false;  // true if begin() has been called and the portal is running
+
   DNSServer* dnsServer = new DNSServer();
 
   std::map<String, unsigned long> validSessions;  // sessionId -> expiry timestamp

@@ -28,18 +28,9 @@ CaptivePortal::CaptivePortal(CaptivePortalConfig& config,
 
 CaptivePortal::~CaptivePortal() {
   DPRINTF(0, "[CaptivePortal::~CaptivePortal]");
-  if (cpHandlers) {
-    delete cpHandlers;
-    cpHandlers = nullptr;
-  }
-  if (webServer) {
-    delete webServer;
-    webServer = nullptr;
-  }
-  if (dnsServer) {
-    delete dnsServer;
-    dnsServer = nullptr;
-  }
+
+  // Stop AP
+  stop();
 }
 
 void CaptivePortal::begin() {
@@ -111,15 +102,65 @@ void CaptivePortal::begin(const char* ssid) {
 
   // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
-  webServer->collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
-  webServer->begin();
-  DPRINTF(1,
-          "Captive Portal SSID started\n\t"
-          "Connect WiFi to: %s\n\t"
-          "and navigate to: http://%s/",
-          Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
+  if (webServer) {
+    webServer->collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
+    webServer->begin();
+    DPRINTF(1,
+            "Captive Portal SSID started\n\t"
+            "Connect WiFi to: %s\n\t"
+            "and navigate to: http://%s/",
+            Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
+    running = true;
 
-  blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup completion
+    blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup completion
+  } else {
+    DPRINTF(3, "Webserver not initialized!");
+    blinkLedOnPin(Settings.LedPin, 5, 100, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup invallid
+  }
+}
+
+bool CaptivePortal::start() {
+  if (running) return true;
+
+  // Ensure objects exist
+  if (!webServer) webServer = new WebServer(80);
+  if (!dnsServer) dnsServer = new DNSServer();
+
+  begin();  // uses Settings.DeviceHostname
+  running = true;
+  return true;
+}
+
+bool CaptivePortal::stop() {
+  if (!running) return true;
+
+  // Stop servers first
+  if (dnsServer) dnsServer->stop();
+  if (webServer) webServer->stop();
+
+  // Stop AP
+  WiFi.softAPdisconnect(true);
+
+  // Free handlers + server objects (so re-start is clean)
+  if (cpHandlers) {
+    delete cpHandlers;
+    cpHandlers = nullptr;
+  }
+  if (webServer) {
+    delete webServer;
+    webServer = nullptr;
+  }
+  if (dnsServer) {
+    delete dnsServer;
+    dnsServer = nullptr;
+  }
+
+  running = false;
+  return true;
+}
+
+bool CaptivePortal::isRunning() const {
+  return running;
 }
 
 /**
@@ -202,6 +243,8 @@ void CaptivePortal::setupHandlers() {
  * @brief Handles DNS and HTTP traffic and watches reset pin.
  */
 void CaptivePortal::handle() {
+  if (!running) return;
+
   dnsServer->processNextRequest();
   webServer->handleClient();
 
