@@ -30,7 +30,25 @@ CaptivePortal::~CaptivePortal() {
   DPRINTF(0, "[CaptivePortal::~CaptivePortal]");
 
   // Stop AP
-  stop();
+  if (dnsServer) dnsServer->stop();
+  if (webServer) webServer->stop();
+
+  // Stop AP
+  WiFi.softAPdisconnect(true);
+
+  // Free handlers + server objects (so re-start is clean)
+  if (cpHandlers) {
+    delete cpHandlers;
+    cpHandlers = nullptr;
+  }
+  if (webServer) {
+    delete webServer;
+    webServer = nullptr;
+  }
+  if (dnsServer) {
+    delete dnsServer;
+    dnsServer = nullptr;
+  }
 }
 
 void CaptivePortal::begin() {
@@ -111,7 +129,6 @@ void CaptivePortal::begin(const char* ssid) {
             "and navigate to: http://%s/",
             Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
     running = true;
-
     blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup completion
   } else {
     DPRINTF(3, "Webserver not initialized!");
@@ -120,18 +137,30 @@ void CaptivePortal::begin(const char* ssid) {
 }
 
 bool CaptivePortal::start() {
+  DPRINTF(0, "CaptivePortal::start")
   if (running) return true;
 
   // Ensure objects exist
-  if (!webServer) webServer = new WebServer(80);
-  if (!dnsServer) dnsServer = new DNSServer();
+  if (!webServer || !dnsServer) return false;
 
-  begin();  // uses Settings.DeviceHostname
+  // Restart SoftAP
+  if (!WiFi.softAP(Settings.DeviceHostname.c_str(), Settings.AdminPassword.c_str())) {
+    DPRINTF(3, "WiFi.softAP failed");
+    return false;
+  }
+
+  // Restart DNS
+  dnsServer->start(53, "*", WiFi.softAPIP());
+
+  // Restart web server
+  webServer->begin();
+
   running = true;
   return true;
 }
 
 bool CaptivePortal::stop() {
+  DPRINTF(0, "CaptivePortal::stop");
   if (!running) return true;
 
   // Stop servers first
@@ -141,26 +170,8 @@ bool CaptivePortal::stop() {
   // Stop AP
   WiFi.softAPdisconnect(true);
 
-  // Free handlers + server objects (so re-start is clean)
-  if (cpHandlers) {
-    delete cpHandlers;
-    cpHandlers = nullptr;
-  }
-  if (webServer) {
-    delete webServer;
-    webServer = nullptr;
-  }
-  if (dnsServer) {
-    delete dnsServer;
-    dnsServer = nullptr;
-  }
-
   running = false;
   return true;
-}
-
-bool CaptivePortal::isRunning() const {
-  return running;
 }
 
 /**

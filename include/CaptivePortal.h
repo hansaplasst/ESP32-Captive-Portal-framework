@@ -51,9 +51,9 @@ class CaptivePortal {
    */
   virtual void begin(const char* ssid);
 
-  bool start();            ///< Starts the captive portal
-  bool stop();             ///< Stops the captive portal
-  bool isRunning() const;  ///< true if the portal is running
+  bool start();                                ///< Starts the captive portal
+  bool stop();                                 ///< Stops the captive portal
+  bool isRunning() const { return running; };  ///< true if the portal is running
   /**
    * @brief Main loop handler.
    *
