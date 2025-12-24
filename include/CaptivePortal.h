@@ -136,6 +136,14 @@ class CaptivePortal {
    */
   bool loadConfig();
 
+  /**
+   * @brief Called at the start of every HTTP request handler registered by the framework.
+   *
+   * Default implementation does nothing. Derived portals can override this
+   * to implement request activity tracking, analytics, etc.
+   */
+  virtual void onHttpRequest() {}
+
  private:
   bool running = false;  // true if begin() has been called and the portal is running
 

@@ -230,29 +230,29 @@ void CaptivePortal::setupHandlers() {
 
   webServer->serveStatic("/styles.css", webFileSystem, "/styles.css");
 
-  webServer->on("/", HTTP_GET, [this]() { cpHandlers->handleRoot(); });
-  webServer->on("/login", HTTP_POST, [this]() { cpHandlers->handleLogin(); });
-  webServer->on("/updatepass", HTTP_POST, [this]() { cpHandlers->handleUpdatePass(); });
-  webServer->on("/home", HTTP_GET, [this]() { cpHandlers->handleHome(); });
-  webServer->on("/edit", HTTP_GET, [this]() { cpHandlers->handleEdit(); });
-  webServer->on("/devices", HTTP_GET, [this]() { cpHandlers->handleDevices(); });
-  webServer->on("/system", HTTP_GET, [this]() { cpHandlers->handleSystem(); });
-  webServer->on("/logout", HTTP_POST, [this]() { cpHandlers->handleLogout(); });
-  webServer->on("/reboot", HTTP_POST, [this]() { cpHandlers->handleReboot(); });
-  webServer->on("/factoryreset", HTTP_POST, [this]() { cpHandlers->handleFactoryReset(); });
-  webServer->on("/update", HTTP_POST, [this]() { cpHandlers->handleFirmwareUpdateDone(); }, [this]() { cpHandlers->handleFirmwareUpload(); });
-  webServer->on("/listfiles", HTTP_GET, [this]() { cpHandlers->handleListFiles(); });
-  webServer->on("/editfile", HTTP_GET, [this]() { cpHandlers->handleEditFileGet(); });
-  webServer->on("/editfile", HTTP_POST, [this]() { cpHandlers->handleEditFilePost(); });
-  webServer->on("/wifiscan", HTTP_GET, [this]() { cpHandlers->handleWiFiScan(); });
-  webServer->on("/devicename", HTTP_GET, [this]() { cpHandlers->handleDeviceNameGet(); });
-  webServer->on("/updatedevicename", HTTP_POST, [this]() { cpHandlers->handleUpdateDeviceName(); });
+  webServer->on("/", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleRoot(); });
+  webServer->on("/login", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleLogin(); });
+  webServer->on("/updatepass", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleUpdatePass(); });
+  webServer->on("/home", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleHome(); });
+  webServer->on("/edit", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleEdit(); });
+  webServer->on("/devices", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleDevices(); });
+  webServer->on("/system", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleSystem(); });
+  webServer->on("/logout", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleLogout(); });
+  webServer->on("/reboot", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleReboot(); });
+  webServer->on("/factoryreset", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleFactoryReset(); });
+  webServer->on("/update", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleFirmwareUpdateDone(); }, [this]() {this->onHttpRequest(); cpHandlers->handleFirmwareUpload(); });
+  webServer->on("/listfiles", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleListFiles(); });
+  webServer->on("/editfile", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleEditFileGet(); });
+  webServer->on("/editfile", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleEditFilePost(); });
+  webServer->on("/wifiscan", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleWiFiScan(); });
+  webServer->on("/devicename", HTTP_GET, [this]() {this->onHttpRequest(); cpHandlers->handleDeviceNameGet(); });
+  webServer->on("/updatedevicename", HTTP_POST, [this]() {this->onHttpRequest(); cpHandlers->handleUpdateDeviceName(); });
 
   // Redirect all other requests to captive portal
   webServer->on("/generate_204", HTTP_GET, [this]() { webServer->send(204, "text/plain", ""); });
-  webServer->on("/fwlink", [this]() { cpHandlers->handleCaptive(); });
-  webServer->on("/hotspot-detect.html", [this]() { cpHandlers->handleCaptive(); });
-  webServer->onNotFound([this]() { cpHandlers->handleCaptive(); });
+  webServer->on("/fwlink", [this]() {this->onHttpRequest(); cpHandlers->handleCaptive(); });
+  webServer->on("/hotspot-detect.html", [this]() {this->onHttpRequest(); cpHandlers->handleCaptive(); });
+  webServer->onNotFound([this]() {this->onHttpRequest(); cpHandlers->handleCaptive(); });
 }
 
 /**
