@@ -179,7 +179,7 @@ bool CaptivePortal::stop() {
   if (webServer) webServer->stop();
 
   // Stop AP
-  WiFi.softAPdisconnect(true);
+  WiFi.softAPdisconnect(false);  // false leaves Wi-Fi stack + netif + radio initialized and avoids: "E (34092) wifi_init_default: netstack cb reg failed with 12308"
 
   running = false;
   return true;
