@@ -5,6 +5,7 @@
 #include <dprintf.h>
 
 // Helper: split dot-path traversal and optionally create missing objects.
+// ArduinoJson v7+: avoid containsKey(); use obj[key].isNull()/is<T>() instead.
 static JsonVariant getPathVariant(JsonDocument& doc, const String& path, bool createMissing) {
   JsonVariant cur = doc.as<JsonVariant>();
   int start = 0;
@@ -16,19 +17,22 @@ static JsonVariant getPathVariant(JsonDocument& doc, const String& path, bool cr
 
     if (!cur.is<JsonObject>()) {
       if (!createMissing) return JsonVariant();
-      // Convert current node to object if needed
       cur.to<JsonObject>();
     }
 
     JsonObject obj = cur.as<JsonObject>();
 
-    if (!obj.containsKey(token)) {
+    JsonVariant child = obj[token];
+
+    // Missing path element?
+    if (child.isNull()) {
       if (!createMissing) return JsonVariant();
-      // Create missing intermediate object
+      // Create intermediate object
       obj[token].to<JsonObject>();
+      child = obj[token];
     }
 
-    cur = obj[token];
+    cur = child;
   }
 
   return cur;
