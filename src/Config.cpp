@@ -268,7 +268,7 @@ bool CaptivePortalConfig::add(const String& key, const String& value) {
   // Does it already exist?
   JsonVariant existing = getPathVariant(doc, key, false);
   if (!existing.isNull()) {
-    DPRINTF(2, "Key already exists: %s", key.c_str());
+    DPRINTF(0, "Key already exists: %s", key.c_str());
     return false;
   }
 
