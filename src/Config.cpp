@@ -5,7 +5,6 @@
 #include <dprintf.h>
 
 // Helper: split dot-path traversal and optionally create missing objects.
-// ArduinoJson v7+: avoid containsKey(); use obj[key].isNull()/is<T>() instead.
 static JsonVariant getPathVariant(JsonDocument& doc, const String& path, bool createMissing) {
   JsonVariant cur = doc.as<JsonVariant>();
   int start = 0;
@@ -289,7 +288,7 @@ bool CaptivePortalConfig::add(const String& key, const String& value) {
     return false;
   }
 
-  const size_t written = serializeJson(doc, out);
+  const size_t written = serializeJsonPretty(doc, out);
   out.close();
 
   if (written == 0) {
@@ -399,7 +398,7 @@ bool CaptivePortalConfig::set(const String& key, const String& value) {
     return false;
   }
 
-  const size_t written = serializeJson(doc, out);
+  const size_t written = serializeJsonPretty(doc, out);
   out.close();
 
   if (written == 0) {
