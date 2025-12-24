@@ -51,9 +51,35 @@ class CaptivePortal {
    */
   virtual void begin(const char* ssid);
 
-  bool start();                                ///< Starts the captive portal
-  bool stop();                                 ///< Stops the captive portal
+  /**
+   * @brief Start the captive portal network services.
+   *
+   * Starts the WiFi SoftAP, DNS server and HTTP server using
+   * the existing configuration and registered handlers.
+   *
+   * @return true if the portal is running or was started successfully.
+   * @return false if startup failed.
+   */
+  bool start();  ///< Starts the captive portal
+
+  /**
+   * @brief Stop the captive portal network services.
+   *
+   * Stops DNS and HTTP servers and disconnects the WiFi SoftAP.
+   * Registered handlers and configuration remain intact.
+   *
+   * @return true if the portal was stopped or already stopped.
+   */
+  bool stop();  ///< Stops the captive portal
+
+  /**
+   * @brief Check if the captive portal is currently running.
+   *
+   * @return true if the portal is active.
+   * @return false if the portal is stopped.
+   */
   bool isRunning() const { return running; };  ///< true if the portal is running
+
   /**
    * @brief Main loop handler.
    *

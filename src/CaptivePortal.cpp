@@ -136,6 +136,14 @@ void CaptivePortal::begin(const char* ssid) {
   }
 }
 
+/**
+ * @brief Start captive portal runtime services.
+ *
+ * This function restarts the WiFi SoftAP using the configured
+ * device hostname and admin password, followed by DNS and HTTP services.
+ *
+ * It does NOT reinitialize handlers or configuration.
+ */
 bool CaptivePortal::start() {
   DPRINTF(0, "CaptivePortal::start")
   if (running) return true;
@@ -149,16 +157,19 @@ bool CaptivePortal::start() {
     return false;
   }
 
-  // Restart DNS
-  dnsServer->start(53, "*", WiFi.softAPIP());
-
-  // Restart web server
-  webServer->begin();
+  setupDNS();          // Restart DNS
+  webServer->begin();  // Restart web server
 
   running = true;
   return true;
 }
 
+/**
+ * @brief Stop captive portal runtime services.
+ *
+ * Stops DNS and HTTP servers and disconnects the SoftAP.
+ * This function does not destroy server objects or handlers.
+ */
 bool CaptivePortal::stop() {
   DPRINTF(0, "CaptivePortal::stop");
   if (!running) return true;
