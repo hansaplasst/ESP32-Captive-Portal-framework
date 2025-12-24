@@ -31,7 +31,7 @@ class CaptivePortal {
                 fs::LittleFSFS& fileSystem = LittleFS /* Leave as is if you run: pio run --target uploadfs */,
                 bool formatOnFail = false, const char* basePath = "/littlefs",
                 uint8_t maxOpenFiles = (uint8_t)10U, const char* partitionLabel = "spiffs");
-  ~CaptivePortal();
+  virtual ~CaptivePortal();
 
   /// Configuration settings for the captive portal
   CaptivePortalConfig& Settings;
@@ -60,7 +60,7 @@ class CaptivePortal {
    * @return true if the portal is running or was started successfully.
    * @return false if startup failed.
    */
-  bool start();  ///< Starts the captive portal
+  virtual bool start();  ///< Starts the captive portal
 
   /**
    * @brief Stop the captive portal network services.
@@ -70,7 +70,7 @@ class CaptivePortal {
    *
    * @return true if the portal was stopped or already stopped.
    */
-  bool stop();  ///< Stops the captive portal
+  virtual bool stop();  ///< Stops the captive portal
 
   /**
    * @brief Check if the captive portal is currently running.
@@ -78,7 +78,7 @@ class CaptivePortal {
    * @return true if the portal is active.
    * @return false if the portal is stopped.
    */
-  bool isRunning() const { return running; };  ///< true if the portal is running
+  virtual bool isRunning() const { return running; };  ///< true if the portal is running
 
   /**
    * @brief Main loop handler.
@@ -86,7 +86,7 @@ class CaptivePortal {
    * This should be called in the Arduino loop() function. It handles
    * DNS requests, HTTP webServer traffic, and checks the reset pin.
    */
-  void handle();
+  virtual void handle();
 
   /**
    * @brief Creates a new session ID and stores it with an expiry time.

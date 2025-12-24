@@ -44,13 +44,14 @@ class CaptivePortalConfig {
   uint8_t RgbBrightness = 128;                           // Brightness of the RGB LED (0-255)
   uint8_t ResetPin = 4;                                  // Pin number for the reset button
 
-  bool configExists();                                 // Tests if ConfigFile Exists
-  bool loadConfig();                                   // Reads configuration from ConfigFile
-  bool imported();                                     // Returns true if loadConfig() was successfull
-  bool save(bool useDefaultValues = false);            // Saves the configuration to LittleFS
-  bool add(const String& key, const String& value);    // Add a setting if it does not already exist
-  bool exist(const String& key, const String& value);  // Check whether if setting exists and matches the provided value
-  bool set(const String& key, const String& value);    // Set or update a configuration value
+  bool configExists();                                             // Tests if ConfigFile Exists
+  bool loadConfig();                                               // Reads configuration from ConfigFile
+  bool imported();                                                 // Returns true if loadConfig() was successfull
+  bool save(bool useDefaultValues = false);                        // Saves the configuration to LittleFS
+  bool add(const String& key, const String& value);                // Add a setting if it does not already exist
+  bool exist(const String& key, const String& value);              // Check whether if setting exists and matches the provided value
+  bool set(const String& key, const String& value);                // Set or update a configuration value
+  uint32_t getUInt(const String& key, uint32_t defaultValue = 0);  // Get an unsigned integer from config by key (dot-path)
 
   bool setDeviceName(const String& name);  // Sets a custom device name in config.json
   String getEffectiveDeviceName() const;   // Returns DeviceName if set, otherwise DeviceHostname

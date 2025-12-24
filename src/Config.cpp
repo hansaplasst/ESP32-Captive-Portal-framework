@@ -406,6 +406,38 @@ bool CaptivePortalConfig::set(const String& key, const String& value) {
   return true;
 }
 
+/**
+ * @brief Get an unsigned integer from config by key (dot-path).
+ * @param key Dot-separated JSON path (e.g. "settings.integers.value")
+ * @param defaultValue Value returned when missing or invalid
+ * @return Parsed value or defaultValue
+ */
+uint32_t CaptivePortalConfig::getUInt(const String& key, uint32_t defaultValue) {
+  File f = fileSystem.open(ConfigFile, "r");
+  if (!f) return defaultValue;
+
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, f);
+  f.close();
+  if (err) return defaultValue;
+
+  JsonVariant v = getPathVariant(doc, key, false);
+  if (v.isNull()) return defaultValue;
+
+  if (v.is<uint32_t>()) return v.as<uint32_t>();
+  if (v.is<long>()) {
+    long n = v.as<long>();
+    return (n < 0) ? defaultValue : (uint32_t)n;
+  }
+  if (v.is<const char*>()) {
+    const char* s = v.as<const char*>();
+    if (!s) return defaultValue;
+    long n = String(s).toInt();
+    return (n < 0) ? defaultValue : (uint32_t)n;
+  }
+  return defaultValue;
+}
+
 bool CaptivePortalConfig::setDeviceName(const String& name) {
   DeviceName = name;
   return save();
