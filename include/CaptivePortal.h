@@ -153,15 +153,9 @@ class CaptivePortal {
   /**
    * @brief Initializes the WiFi access point.
    *
-   * @param ssid SSID for the AP
-   * @param password Password for the AP
+   * @return true on success
    */
-  void setupWiFi(const char* ssid, const char* password);
-
-  /**
-   * @brief Starts the DNS webServer for redirecting all queries to the AP.
-   */
-  void setupDNS();
+  bool setupWiFi();
 };
 
 #endif  // CAPTIVE_PORTAL_H

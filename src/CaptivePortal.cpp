@@ -114,26 +114,12 @@ void CaptivePortal::begin(const char* ssid) {
     Settings.resetToFactoryDefault();  // Reset to factory defaults
   }
 
-  setupWiFi(Settings.getEffectiveDeviceName().c_str(), Settings.AdminPassword.c_str());  // Start AP
-  setupDNS();                                                                            // Start DNS redirector
-  setupHandlers();                                                                       // Register all route handlers
-
-  // Prepare web webServer and headers to collect
   static const char* headerKeys[] = {"Cookie", "Authorization"};
   if (webServer) {
     webServer->collectHeaders(headerKeys, sizeof(headerKeys) / sizeof(headerKeys[0]));
-    webServer->begin();
-    DPRINTF(1,
-            "Captive Portal SSID started\n\t"
-            "Connect WiFi to: %s\n\t"
-            "and navigate to: http://%s/",
-            Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
-    running = true;
-    blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup completion
-  } else {
-    DPRINTF(3, "Webserver not initialized!");
-    blinkLedOnPin(Settings.LedPin, 5, 100, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup invallid
+    setupHandlers();  // Register all route handlers
   }
+  start();  // Start Captive Portal
 }
 
 /**
@@ -151,15 +137,23 @@ bool CaptivePortal::start() {
   // Ensure objects exist
   if (!webServer || !dnsServer) return false;
 
-  // Restart SoftAP
-  if (!WiFi.softAP(Settings.getEffectiveDeviceName().c_str(), Settings.AdminPassword.c_str())) {
+  bool wifi_ok = setupWiFi();                                      // Start SoftAP
+  bool dns_ok = dnsServer->start(DNS_PORT, "*", WiFi.softAPIP());  // Start DNS redirector
+
+  if (!wifi_ok || !dns_ok) {
     DPRINTF(3, "WiFi.softAP failed");
+    blinkLedOnPin(Settings.LedPin, 5, 100, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup invallid
     return false;
   }
 
-  setupDNS();          // Restart DNS
-  webServer->begin();  // Restart web server
+  webServer->begin();  // Start web server
+  DPRINTF(1,
+          "Captive Portal SSID started\n\t"
+          "Connect WiFi to: %s\n\t"
+          "and navigate to: http://%s/",
+          Settings.getEffectiveDeviceName().c_str(), WiFi.softAPIP().toString().c_str());
 
+  blinkLedOnPin(Settings.LedPin, 3, 1000, Settings.HasRgbLed, Settings.RgbBrightness);  // Indicate setup completion
   running = true;
   return true;
 }
@@ -179,7 +173,8 @@ bool CaptivePortal::stop() {
   if (webServer) webServer->stop();
 
   // Stop AP
-  WiFi.softAPdisconnect(false);  // false leaves Wi-Fi stack + netif + radio initialized and avoids: "E (34092) wifi_init_default: netstack cb reg failed with 12308"
+  WiFi.softAPdisconnect(false);  // Stop SoftAP (no full deinit path)
+  WiFi.mode(WIFI_OFF);           // Turn off Wi-Fi (RF will still be used by BLE coexistence if BLE is active)
 
   running = false;
   return true;
@@ -198,27 +193,26 @@ bool CaptivePortal::loadConfig() {
 
 /**
  * @brief Configures and starts the WiFi access point.
+ *
+ * @return true on success
  */
-void CaptivePortal::setupWiFi(const char* ssid, const char* password) {
+bool CaptivePortal::setupWiFi() {
   DPRINTF(0, "[CaptivePortal::setupWiFi]");
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  // disable brownout
 #endif
-  WiFi.softAPConfig(Settings.DeviceIP, Settings.DeviceIP, Settings.DeviceIPMask);
+  bool ok = WiFi.softAPConfig(Settings.DeviceIP, Settings.DeviceIP, Settings.DeviceIPMask);
 #ifdef BROWNOUT_HACK
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 1);  // re-enable brownout
 #endif
 
-  DPRINTF(0, "Starting AP SSID: %s", ssid);
-  WiFi.softAP(ssid, password);
-  delay(500);
-}
+  if (!ok) return ok;
 
-/**
- * @brief Starts DNS webServer to redirect all hostnames to AP IP.
- */
-void CaptivePortal::setupDNS() {
-  dnsServer->start(DNS_PORT, "*", WiFi.softAPIP());
+  DPRINTF(0, "Starting AP SSID: %s", Settings.getEffectiveDeviceName().c_str());
+  WiFi.mode(WIFI_AP);
+  ok = WiFi.softAP(Settings.getEffectiveDeviceName().c_str(), Settings.AdminPassword.c_str());
+  delay(500);
+  return ok;
 }
 
 /**
