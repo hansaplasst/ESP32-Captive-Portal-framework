@@ -353,7 +353,7 @@ void CPHandlers::handleEditFilePost() {
   }
   file.print(content);
   file.close();
-  if (name == s_portal->Settings.ConfigFile)
+  if (name.equals(s_portal->Settings.ConfigFile))
     s_portal->Settings.loadConfig();  // Reload config after edit
 
   noCache();

@@ -176,6 +176,11 @@ bool CaptivePortal::stop() {
   WiFi.softAPdisconnect(false);  // Stop SoftAP (no full deinit path)
   WiFi.mode(WIFI_OFF);           // Turn off Wi-Fi (RF will still be used by BLE coexistence if BLE is active)
 
+  // Remove sid
+  String sid = cpHandlers->getSessionIdFromCookie();
+  if (!sid.isEmpty())
+    removeSession(sid);
+
   running = false;
   return true;
 }
