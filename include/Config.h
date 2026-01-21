@@ -42,7 +42,7 @@ class CaptivePortalConfig {
   uint8_t LedPin = 2;                                    // Pin number for the LED indicator
   bool HasRgbLed = false;                                // True if the LED is an RGB LED
   uint8_t RgbBrightness = 128;                           // Brightness of the RGB LED (0-255)
-  uint8_t ResetPin = 4;                                  // Pin number for the reset button
+  uint8_t ResetPin = GPIO_NUM_4;                         // Pin number for the reset button
 
   bool configExists();                                             // Tests if ConfigFile Exists
   bool loadConfig();                                               // Reads configuration from ConfigFile
